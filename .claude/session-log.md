@@ -1,5 +1,23 @@
 # Session Log
 
+## 2026-09-22 08:03
+
+**Summary:** Confirmed the 07:00 UTC timer fires unattended, but the run was `stale`: MTGJSON hadn't published Sep 22 by 11:00 UTC, so the timer is too early on late days. Added an hourly publish-time watcher (`oracle.watch`, `cc701e0`) to pick a new time. Rewrote the stats page in Kit's blog voice (`7ee58e6`). Built the Jev lab page (`28fff6a`, `686a836`): an exploratory Hobbit analysis plus a table of all 467 linked cards; rule A (Jev-linked, 2+ links, under $3) is locked for the next set. A replay (`oracle.replay`, weekly) showed Buy was wrong (it bought spikes mid-crash). A price study found the real tells: the weeks 2–4 release crash, weekly moves reverse, commander hype fades, and demand predicts nothing. Buy/Hold/Sell now uses those (`bea384a`), with the method on the stats page. Kit caught a misleading "when The Hobbit came out" claim; the site now says the test looks back (`6c8f122`). Correction: the TypeSafe key is also in the local `.env`.
+
+**Status:**
+- Unattended daily timer — **verified in the real environment**: fired 07:01, published, `stale` (MTGJSON late)
+- MTGJSON watcher — **verified in the real environment**: 10:06 manual + 11:00 unattended rows logged
+- New Buy/Hold/Sell rules — **verified in the real environment**: live 54/332/2 matches local; replay is in-sample only
+- Jev lab + stats methodology — **verified in the real environment**: Chrome on live URL, Kit checked incognito
+
+**Open tasks:**
+- [ ] next — read `oracle.watch --report` after ~5–7 days, retime `commander-oracle-daily.timer`; verify a first-run `ok` (NEXT.md)
+- [ ] not-yet-verified — first fair replay of the new rules, Mon 2026-09-28 09:00 UTC (`journalctl -u commander-oracle-replay`)
+- [ ] not-yet-verified — rule A on the next set: flag older cards before release, score ~5 weeks after
+- [ ] blocked-by-Kit — rule A display: separate Watch list (recommended) vs Buy vs Jev lab only
+
+**Deferred:** `deploy/README.md` sqlite3 line fails on the VPS; `C:\AI\CLAUDE.md` map entry for this repo; social drafts sit uncommitted in `C:\AI\blog\content-pipeline\social\commander-oracle*`.
+
 ## 2026-09-21 22:50
 
 **Summary:** New project, built end to end in one session: a Commander buy/hold/sell site for rares and mythics from the 5 newest expansions (388 cards), using TypeSafe's Jev to judge rules text only (no prices). Live at oracle.marzipan-solutions.com, public at github.com/kitapplegate/commander-oracle (MIT, WotC fan-content notice). Headline result: a pre-registered Hobbit backtest; Jev-linked older cards rose 25%+ at 23.6% vs a 13.6% market rate (p≈0.009 vs text-only), but that's one event. Wrong assumptions caught: MTGJSON's AllPrices only covers 90 days, so we now keep our own history in `data/universe.sqlite`; reversible "X // X" printings duplicated cards, so grouping is now by oracle id (`a741541`); older sets' "preorder peak" was really the 90-day high, and the wording is now honest. MTGGoldfish history was ruled out (terms say personal use only). The key lives only in the VPS `.env` (mode 600). Last commit `0819d51`.
