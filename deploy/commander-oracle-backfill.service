@@ -1,0 +1,14 @@
+[Unit]
+Description=Commander Oracle monthly backfill from MTGJSON's 90-day price file
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=oracle
+Group=oracle
+WorkingDirectory=/opt/commander-oracle/app
+ExecStart=/opt/commander-oracle/app/.venv/bin/python -m oracle.daily --backfill
+Nice=15
+MemoryMax=2G
+TimeoutStartSec=1h

@@ -26,6 +26,7 @@ import time
 import traceback
 from datetime import datetime, timezone
 
+import ijson
 import requests
 
 from . import universe
@@ -122,10 +123,42 @@ def run(force_refresh: bool = False) -> int:
                         record["unknown_uuids"], record["cards_refreshed"], round(time.time() - t0, 1), record["note"]))
 
 
+def backfill() -> int:
+    """Re-read MTGJSON's full ~90-day file and fill any days we missed. Monthly job."""
+    started = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    t0 = time.time()
+    db = universe.connect()
+    status, note, priced = "failed", "", 0
+    try:
+        if not universe.uuid_map(db):
+            refresh_printings()
+            universe.refresh_cards(db)
+        before = db.execute("SELECT COUNT(DISTINCT day) FROM prices").fetchone()[0]
+        _download("https://mtgjson.com/api/v5/AllPrices.json.gz", universe.ALL_PRICES)
+        with gzip.open(universe.ALL_PRICES, "rb") as f:
+            prices, _ = universe.cheapest_daily(ijson.kvitems(f, "data"), universe.uuid_map(db))
+        universe.upsert_prices(db, prices)
+        priced = len(prices)
+        after = db.execute("SELECT COUNT(DISTINCT day) FROM prices").fetchone()[0]
+        status, note = "backfill", f"days in history {before} -> {after}"
+        print(note)
+        return 0
+    except Exception as e:
+        note = f"{type(e).__name__}: {e}"[:500]
+        traceback.print_exc()
+        return 1
+    finally:
+        with db:
+            db.execute("INSERT INTO runs VALUES (?,?,?,?,?,?,?,?)",
+                       (started, None, status, priced, 0, 0, round(time.time() - t0, 1), note))
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--refresh", action="store_true", help="force a card-list refresh")
-    sys.exit(run(force_refresh=ap.parse_args().refresh))
+    ap.add_argument("--backfill", action="store_true", help="fill gaps from MTGJSON's 90-day file")
+    args = ap.parse_args()
+    sys.exit(backfill() if args.backfill else run(force_refresh=args.refresh))
 
 
 if __name__ == "__main__":

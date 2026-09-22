@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the Commander Oracle price pipeline daily, after MTGJSON's ~06:15 UTC update
+
+[Timer]
+OnCalendar=*-*-* 07:00:00 UTC
+RandomizedDelaySec=10min
+# Run on the next boot if the VPS was down at 07:00.
+Persistent=true
+
+[Install]
+WantedBy=timers.target
