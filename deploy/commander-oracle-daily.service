@@ -1,5 +1,5 @@
 [Unit]
-Description=Commander Oracle daily price pipeline (one-shot)
+Description=Commander Oracle daily pipeline: prices, then rebuild and publish the site data (one-shot)
 Wants=network-online.target
 After=network-online.target
 
@@ -8,7 +8,12 @@ Type=oneshot
 User=oracle
 Group=oracle
 WorkingDirectory=/opt/commander-oracle/app
+# Steps run in order; if one fails, the rest are skipped and the site keeps its last good data.
 ExecStart=/opt/commander-oracle/app/.venv/bin/python -m oracle.daily
+ExecStart=/opt/commander-oracle/app/.venv/bin/python -m oracle.build hob
+# Asks Jev only about cards missing from data/jev_cache.json (needs TYPESAFE_API_KEY in .env).
+ExecStart=/opt/commander-oracle/app/.venv/bin/python -m oracle.judge
+ExecStart=/opt/commander-oracle/app/.venv/bin/python -m oracle.publish /var/www/oracle.marzipan-solutions.com/data
 Nice=10
 # Shares the VPS with other live apps: cap memory and time.
 MemoryMax=1500M

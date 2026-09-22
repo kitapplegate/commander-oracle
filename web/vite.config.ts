@@ -11,15 +11,17 @@ function cardsJson(): Plugin {
   return {
     name: 'cards-json',
     configureServer(server) {
-      server.middlewares.use('/cards.json', (_req, res) => {
+      server.middlewares.use('/data/cards.json', (_req, res) => {
         res.setHeader('Content-Type', 'application/json')
         res.setHeader('Cache-Control', 'no-store')
         res.end(readFileSync(CARDS))
       })
     },
     closeBundle() {
-      mkdirSync(resolve(__dirname, 'dist'), { recursive: true })
-      copyFileSync(CARDS, resolve(__dirname, 'dist/cards.json'))
+      // dist/data/ is its own folder so the server's pipeline user can own it
+      // and publish fresh data without touching the rest of the site.
+      mkdirSync(resolve(__dirname, 'dist/data'), { recursive: true })
+      copyFileSync(CARDS, resolve(__dirname, 'dist/data/cards.json'))
     },
   }
 }

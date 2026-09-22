@@ -25,7 +25,8 @@ export default function App() {
   const [open, setOpen] = useState<Card | null>(null)
 
   useEffect(() => {
-    fetch('/cards.json')
+    // Rebuilt daily on the server; no-cache makes the browser revalidate instead of guessing.
+    fetch('/data/cards.json', { cache: 'no-cache' })
       .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then(setDoc)
       .catch(e => setError(String(e)))
