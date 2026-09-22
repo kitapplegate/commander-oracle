@@ -48,4 +48,43 @@ export interface StatsDoc {
   crash: { release: string; cards: number; series: CrashPoint[] }
   pipeline: { cards_tracked: number; history_from: string; history_to: string; days: number; price_rows: number; last_ok_run: string | null }
   set: { name: string; cards: number; verdicts: Record<string, number>; under_1: number }
+  explore: ExploreDoc | null
+}
+
+export interface Share { n: number; share_up_25: number | null; median_change: number | null }
+
+export interface Idea {
+  key: string
+  name: string
+  rho: number
+  buckets: (Share & { label: string })[]
+}
+
+export interface JevExample {
+  older: string
+  new: string
+  rung: number
+  confidence: number
+  combo: number
+  base: number
+  after: number
+  change: number
+  link_count: number
+  new_card_build_around: number
+}
+
+export interface ExploreDoc {
+  event: string
+  market: Share
+  candidates: number
+  linked: number
+  new_cards: number
+  pairs: number
+  ideas: Idea[]
+  by_price: { label: string; market: Share; linked: Share }[]
+  under3_market: Share
+  combos: (Share & { name: string })[]
+  overlap: { four_plus_links: number; very_high_played: number; both: number }
+  ladder: string[]
+  examples: { hit: JevExample; miss: JevExample }
 }

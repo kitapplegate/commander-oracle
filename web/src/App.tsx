@@ -4,6 +4,7 @@ import type { Card, CardsDoc } from './types'
 import { money, VERDICTS, verdictOf, type VerdictKey } from './format'
 import { CardTile } from './components/CardTile'
 import { DetailPanel } from './components/DetailPanel'
+import { JevPage } from './components/JevPage'
 import { StatsPage } from './components/StatsPage'
 
 type Sort = 'demand' | 'price' | 'week' | 'edh'
@@ -159,8 +160,11 @@ function CardsPage() {
   )
 }
 
-type Route = 'cards' | 'stats'
-const routeOf = (): Route => (window.location.hash.startsWith('#/stats') ? 'stats' : 'cards')
+type Route = 'cards' | 'stats' | 'jev'
+const routeOf = (): Route => {
+  const h = window.location.hash
+  return h.startsWith('#/stats') ? 'stats' : h.startsWith('#/jev') ? 'jev' : 'cards'
+}
 
 export default function App() {
   const [route, setRoute] = useState<Route>(routeOf)
@@ -178,9 +182,10 @@ export default function App() {
         <div className="nav-links">
           <a href="#/" className={route === 'cards' ? 'on' : ''}>Cards</a>
           <a href="#/stats" className={route === 'stats' ? 'on' : ''}>How it works &amp; stats</a>
+          <a href="#/jev" className={route === 'jev' ? 'on' : ''}>Jev lab</a>
         </div>
       </nav>
-      {route === 'stats' ? <StatsPage /> : <CardsPage />}
+      {route === 'stats' ? <StatsPage /> : route === 'jev' ? <JevPage /> : <CardsPage />}
       <footer className="foot">
         <p>Unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.</p>
       </footer>

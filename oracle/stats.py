@@ -3,6 +3,7 @@
     python -m oracle.stats
 
 Reads: data/backtest_hob.json (from oracle.backtest; fixed, since the event is past),
+data/explore_hob.json (from oracle.explore, for the Jev page; optional, also fixed),
 data/cards.json (from oracle.build/judge), data/universe.sqlite (pipeline health).
 """
 from __future__ import annotations
@@ -18,6 +19,7 @@ from .sources import DATA
 sys.stdout.reconfigure(encoding="utf-8")
 
 BACKTEST = DATA / "backtest_hob.json"
+EXPLORE = DATA / "explore_hob.json"
 CARDS = DATA / "cards.json"
 OUT = DATA / "stats.json"
 # Synergy buckets for the "hit rate climbs with Jev's score" chart.
@@ -98,6 +100,7 @@ def main() -> None:
         "pipeline": pipeline_section(),
         "set": set_summary(newest["name"], newest_cards),
         "sets": [set_summary(s["name"], [c for c in doc["cards"] if c["set"] == s["code"]]) for s in doc["sets"]],
+        "explore": json.loads(EXPLORE.read_text(encoding="utf-8")) if EXPLORE.exists() else None,
     }
     OUT.write_text(json.dumps(stats, indent=1), encoding="utf-8")
     print(f"wrote {OUT}: {len(stats['crash']['series'])} crash days, "

@@ -360,7 +360,26 @@ a { color: var(--gold); }
 .band { fill: var(--series-1); opacity: .18; }
 .release-line { stroke: var(--gold); stroke-width: 1.5; stroke-dasharray: 4 4; }
 
+/* ---------- Jev lab ---------- */
+.pair { display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; margin: 16px 0; }
+.pair-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; }
+.pair-card span { display: block; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+.pair-card strong { font-size: 17px; }
+.pair-x { color: var(--gold); font-size: 22px; text-align: center; }
+.ladder { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 6px; }
+.ladder li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; padding: 8px 12px; border-radius: 10px; color: var(--text-muted); font-size: 14px; border: 1px solid transparent; }
+.ladder li b { color: var(--text-secondary); }
+.ladder li.on { background: color-mix(in oklab, var(--gold) 12%, var(--surface-1)); border-color: var(--gold); color: var(--text-primary); }
+.ladder li.on b { color: var(--gold); }
+.twin { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+.twin .callout em { font-style: normal; font-weight: 700; }
+.twin .up { color: var(--good); }
+.twin .down { color: var(--critical); }
+.lock { background: var(--surface-1); border: 1px solid var(--gold); border-radius: var(--radius); padding: 18px 22px; margin-top: 18px; }
+.lock h3 { margin: 0 0 6px; color: var(--gold); }
+
 @media (max-width: 900px) {
+  .twin, .pair { grid-template-columns: 1fr; }
   .flow { grid-template-columns: 1fr; }
   .flow-arrow { transform: rotate(90deg); padding: 2px 0; }
   .q-grid, .kpi-row { grid-template-columns: repeat(2, 1fr); }
