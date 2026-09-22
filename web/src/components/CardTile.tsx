@@ -8,10 +8,11 @@ import { VerdictBadge } from './VerdictBadge'
 interface Props {
   card: Card
   index: number
+  setIcon?: string
   onOpen: (c: Card) => void
 }
 
-export function CardTile({ card, index, onOpen }: Props) {
+export function CardTile({ card, index, setIcon, onOpen }: Props) {
   const verdict = verdictOf(card)
   const wk = card.change_7d
   const demand = card.outlook?.demand
@@ -35,7 +36,10 @@ export function CardTile({ card, index, onOpen }: Props) {
       <div className="tile-body">
         <div className="tile-title">
           <h3>{card.name.split(' // ')[0]}</h3>
-          <ColorPips colors={card.color_identity} />
+          <span className="tile-marks">
+            {setIcon && <img className="set-icon" src={setIcon} alt={card.set_name} title={card.set_name} width={16} height={16} />}
+            <ColorPips colors={card.color_identity} />
+          </span>
         </div>
         <div className="tile-stats">
           <div>

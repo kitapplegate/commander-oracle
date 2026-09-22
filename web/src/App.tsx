@@ -24,6 +24,7 @@ function CardsPage() {
   const [sort, setSort] = useState<Sort>('demand')
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState<Card | null>(null)
+  const [setCode, setSetCode] = useState<string>('all')
 
   useEffect(() => {
     // Rebuilt daily on the server; no-cache makes the browser revalidate instead of guessing.
@@ -33,10 +34,12 @@ function CardsPage() {
       .catch(e => setError(String(e)))
   }, [])
 
-  const inRange = useMemo(
-    () => (doc?.cards ?? []).filter(c => (c.price ?? 0) >= minPrice),
-    [doc, minPrice],
+  const inSet = useMemo(
+    () => (doc?.cards ?? []).filter(c => setCode === 'all' || c.set === setCode),
+    [doc, setCode],
   )
+  const inRange = useMemo(() => inSet.filter(c => (c.price ?? 0) >= minPrice), [inSet, minPrice])
+  const setIcons = useMemo(() => Object.fromEntries((doc?.sets ?? []).map(s => [s.code, s.icon])), [doc])
   const counts = useMemo(() => {
     const out: Record<string, number> = {}
     inRange.forEach(c => { const v = verdictOf(c); out[v] = (out[v] ?? 0) + 1 })
@@ -62,7 +65,7 @@ function CardsPage() {
     <>
       <header className="hero">
         <motion.p className="eyebrow" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          {[...new Set(doc.cards.map(c => c.set_name))].join(' · ')} · rares &amp; mythics
+          The {doc.sets.length} newest sets · rares &amp; mythics
         </motion.p>
         <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
           Commander <span>Oracle</span>
@@ -71,6 +74,23 @@ function CardsPage() {
           You cracked a pack. Hold it, buy more, or sell it before it drops?
         </motion.p>
       </header>
+
+      <section className="set-picker" aria-label="Choose a set">
+        <button className={`set-chip${setCode === 'all' ? ' on' : ''}`} onClick={() => setSetCode('all')} aria-pressed={setCode === 'all'}>
+          <span className="set-chip-name">All sets</span>
+          <span className="set-chip-sub">{doc.cards.length} cards</span>
+        </button>
+        {doc.sets.map(s => (
+          <button key={s.code} className={`set-chip${setCode === s.code ? ' on' : ''}`}
+                  onClick={() => setSetCode(setCode === s.code ? 'all' : s.code)} aria-pressed={setCode === s.code}>
+            <img src={s.icon} alt="" width={22} height={22} className="set-icon" />
+            <span className="set-chip-text">
+              <span className="set-chip-name">{s.name}</span>
+              <span className="set-chip-sub">{new Date(s.released + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}</span>
+            </span>
+          </button>
+        ))}
+      </section>
 
       <section className="summary">
         {TILES.map((v, i) => (
@@ -115,9 +135,16 @@ function CardsPage() {
         {verdict !== 'all' && <button className="link-btn" onClick={() => setVerdict('all')}>Clear filter</button>}
       </section>
 
+      <p className="showing" aria-live="polite">
+        Showing <strong>{shown.length}</strong> of {inSet.length} cards
+        {minPrice > 0 && inSet.length > inRange.length && (
+          <> · {inSet.length - inRange.length} under ${minPrice} hidden · <button className="link-btn inline" onClick={() => setMinPrice(0)}>Show all</button></>
+        )}
+      </p>
+
       <motion.main className="grid" layout>
         <AnimatePresence mode="popLayout">
-          {shown.map((c, i) => <CardTile key={c.id} card={c} index={i} onOpen={setOpen} />)}
+          {shown.map((c, i) => <CardTile key={c.id} card={c} index={i} setIcon={setIcons[c.set]} onOpen={setOpen} />)}
         </AnimatePresence>
       </motion.main>
       {shown.length === 0 && <p className="state">No cards match. Try lowering the price floor.</p>}

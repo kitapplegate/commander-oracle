@@ -37,7 +37,7 @@ def main() -> None:
     for card in doc["cards"]:
         card["jev"] = cache["cards"][card["id"]]
         card["outlook"] = outlook.outlook(card)
-    CARDS.write_text(json.dumps(doc, indent=1), encoding="utf-8")
+    CARDS.write_text(json.dumps(doc, separators=(",", ":")), encoding="utf-8")
 
     counts = {}
     for c in doc["cards"]:

@@ -20,14 +20,26 @@ def pct(new: float | None, old: float | None) -> float | None:
     return round((new - old) / old * 100, 1)
 
 
-def price_signals(retail: list[tuple[str, float]], bl_now: float | None = None,
+WINDOW_DAYS = 90       # peak and chart look back this far
+PREORDER_LEAD_DAYS = 7  # the window must start this long before release to include preorders
+
+
+def price_signals(retail: list[tuple[str, float]], released: str, bl_now: float | None = None,
                   ck_now: float | None = None) -> dict:
-    """retail: sorted (day, price) points. bl_now/ck_now: today's Card Kingdom buylist and retail."""
+    """retail: sorted (day, price) points. bl_now/ck_now: today's Card Kingdom buylist and retail.
+
+    The peak is taken over the last WINDOW_DAYS. It only counts as the *preorder* peak
+    if that window reaches back before the set's preorder period; for older sets it's
+    just the 90-day high, and the wording downstream has to say so.
+    """
     if not retail:
         return {"price": None, "history": []}
     last_day, price = retail[-1]
     ago = lambda n: str(date.fromisoformat(last_day) - timedelta(days=n))
-    peak_day, peak = max(retail, key=lambda x: x[1])
+    window_start = ago(WINDOW_DAYS)
+    points = [(d, p) for d, p in retail if d >= window_start]
+    peak_day, peak = max(points, key=lambda x: x[1])
+    preorder_covered = window_start <= str(date.fromisoformat(released) - timedelta(days=PREORDER_LEAD_DAYS))
     return {
         "price": price,
         "as_of": last_day,
@@ -36,10 +48,11 @@ def price_signals(retail: list[tuple[str, float]], bl_now: float | None = None,
         "peak": peak,
         "peak_day": peak_day,
         "off_peak": pct(price, peak),
+        "peak_is_preorder": preorder_covered,
         # Card Kingdom's buylist as a share of its own retail: how badly a dealer
         # wants the card. Around 0.5+ is strong demand; low means they're stocked up.
         "buylist_ratio": round(bl_now / ck_now, 2) if bl_now and ck_now else None,
-        "history": [[d, p] for d, p in retail],
+        "history": [[d, p] for d, p in points],
     }
 
 

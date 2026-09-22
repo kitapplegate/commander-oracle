@@ -46,7 +46,9 @@ def outlook(card: dict) -> dict:
     if (card.get("edh_inclusion") or 0) >= 3:
         reasons.append(f"Already in {card['edh_inclusion']}% of eligible EDHREC decks")
     if off_peak <= -60:
-        reasons.append(f"Down {abs(off_peak):.0f}% from its preorder peak")
+        # Only call it the preorder peak when our price history actually covers preorders.
+        since = "its preorder peak" if card.get("peak_is_preorder") else "its 90-day high"
+        reasons.append(f"Down {abs(off_peak):.0f}% from {since}")
     if wk >= 5:
         reasons.append(f"Up {wk:.0f}% this week")
     elif wk <= -10:

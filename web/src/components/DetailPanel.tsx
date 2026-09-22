@@ -76,7 +76,7 @@ export function DetailPanel({ card, onClose }: { card: Card; onClose: () => void
             <div className="kpis">
               <div><span className="muted small">Price</span><strong>{money(card.price)}</strong></div>
               <div><span className="muted small">7 days</span><strong>{signedPct(card.change_7d)}</strong></div>
-              <div><span className="muted small">Off peak</span><strong>{signedPct(card.off_peak)}</strong></div>
+              <div><span className="muted small">{card.peak_is_preorder ? 'Off preorder peak' : 'Off 90-day high'}</span><strong>{signedPct(card.off_peak)}</strong></div>
               <div><span className="muted small">EDHREC decks</span><strong>{card.edh_decks?.toLocaleString() ?? '—'}</strong></div>
             </div>
           </div>

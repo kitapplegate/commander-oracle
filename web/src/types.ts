@@ -33,14 +33,23 @@ export interface Card {
   peak?: number
   peak_day?: string
   off_peak?: number | null
+  /** true when our price history covers preorders, so the peak is the preorder peak */
+  peak_is_preorder?: boolean
   buylist_ratio?: number | null
   history: [string, number][]
   jev?: Jev
   outlook?: { verdict: Verdict; demand: number; reasons: string[] }
 }
 
+export interface SetMeta {
+  code: string
+  name: string
+  released: string
+  icon: string
+}
+
 export interface CardsDoc {
   generated: string
-  sets: string[]
+  sets: SetMeta[]
   cards: Card[]
 }

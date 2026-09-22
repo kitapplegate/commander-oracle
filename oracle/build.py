@@ -1,6 +1,7 @@
-"""Build data/cards.json for one or more sets.
+"""Build data/cards.json for the newest expansions (or the set codes given).
 
-    python -m oracle.build hob
+    python -m oracle.build            # the RECENT_SETS newest expansions
+    python -m oracle.build hob msh    # just these
 
 Prices come from our own history in data/universe.sqlite (kept current by
 oracle.daily), cheapest non-foil printing per card. Card Kingdom buylist/retail
@@ -30,12 +31,18 @@ def _collector_key(c: dict) -> tuple[int, str]:
     return (int(num) if num else 99999, c["collector_number"])
 
 
+def _oracle_id(c: dict) -> str:
+    # Reversible printings carry oracle_id on their faces, not at the top level.
+    return c.get("oracle_id") or c.get("card_faces", [{}])[0].get("oracle_id") or c["name"]
+
+
 def main_printings(cards: list[dict]) -> list[dict]:
-    by_name: dict[str, list[dict]] = {}
+    # Group by oracle id, not name: a reversible variant is named "X // X".
+    by_card: dict[str, list[dict]] = {}
     for c in cards:
-        by_name.setdefault(c["name"], []).append(c)
+        by_card.setdefault(_oracle_id(c), []).append(c)
     picked = []
-    for name, prints in by_name.items():
+    for prints in by_card.values():
         mains = sorted(filter(_is_main_printing, prints), key=_collector_key)
         chosen = (mains or sorted(prints, key=_collector_key))[0]
         chosen["_variant_count"] = len(prints)
@@ -68,20 +75,21 @@ def _todays_prices() -> dict[str, dict]:
         return {uuid: p.get("paper", {}) for uuid, p in json.load(f)["data"].items()}
 
 
-def build(set_codes: list[str]) -> list[dict]:
+def build(sets: list[dict]) -> list[dict]:
     db = universe.connect()
     if not db.execute("SELECT 1 FROM prices LIMIT 1").fetchone():
         sys.exit("price history is empty; run `python -m oracle.daily` first")
     today = _todays_prices()
     rows = []
-    for code in set_codes:
+    for s in sets:
+        code = s["code"]
         cards = main_printings(sources.scryfall_set_cards(code))
         uuid_of = sources.mtgjson_uuid_map(code)
         print(f"{code}: {len(cards)} rare/mythic cards (main printings)")
         for i, c in enumerate(cards, 1):
             edh = sources.edhrec_card(c["name"])
             history = db.execute("SELECT day, price FROM prices WHERE oracle_id = ? ORDER BY day",
-                                 (c["oracle_id"],)).fetchall()
+                                 (_oracle_id(c),)).fetchall()
             ck = today.get(uuid_of.get(c["id"], ""), {}).get("cardkingdom", {})
             rows.append({
                 "id": c["id"],
@@ -100,19 +108,25 @@ def build(set_codes: list[str]) -> list[dict]:
                 "scryfall_url": c.get("scryfall_uri"),
                 "edhrec_url": edh["url"] if edh else None,
                 **signals.commander_signals(edh),
-                **signals.price_signals(history, _latest(ck, "buylist"), _latest(ck, "retail")),
+                **signals.price_signals(history, c["released_at"], _latest(ck, "buylist"), _latest(ck, "retail")),
             })
             if i % 20 == 0:
                 print(f"  {i}/{len(cards)}")
     return rows
 
 
+RECENT_SETS = 5  # newest expansions shown; a new release rotates in automatically
+
+
 def main() -> None:
-    set_codes = sys.argv[1:] or ["hob"]
-    rows = build(set_codes)
+    sets = sources.recent_expansions(RECENT_SETS)
+    if sys.argv[1:]:  # explicit set codes override, e.g. `python -m oracle.build hob msh`
+        wanted = [c.lower() for c in sys.argv[1:]]
+        sets = [s for s in sources.recent_expansions(50) if s["code"] in wanted]
+    rows = build(sets)
     out = sources.DATA / "cards.json"
     out.write_text(json.dumps({"generated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                               "sets": set_codes, "cards": rows}, indent=1), encoding="utf-8")
+                               "sets": sets, "cards": rows}, separators=(",", ":")), encoding="utf-8")
     priced = [r for r in rows if r["price"] is not None]
     edh = [r for r in rows if r["edh_decks"] is not None]
     print(f"wrote {out}: {len(rows)} cards, {len(priced)} priced, {len(edh)} with EDHREC data")

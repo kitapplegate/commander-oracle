@@ -77,20 +77,27 @@ def pipeline_section() -> dict:
             "last_ok_run": last_ok[0] if last_ok else None}
 
 
-def main() -> None:
-    doc = json.loads(CARDS.read_text(encoding="utf-8"))
-    cards = doc["cards"]
+def set_summary(name: str, cards: list[dict]) -> dict:
     verdicts: dict[str, int] = {}
     for c in cards:
         v = c.get("outlook", {}).get("verdict", "pending")
         verdicts[v] = verdicts.get(v, 0) + 1
+    return {"name": name, "cards": len(cards), "verdicts": verdicts,
+            "under_1": sum((c.get("price") or 0) < 1 for c in cards)}
+
+
+def main() -> None:
+    doc = json.loads(CARDS.read_text(encoding="utf-8"))
+    newest = max(doc["sets"], key=lambda s: s["released"])
+    newest_cards = [c for c in doc["cards"] if c["set"] == newest["code"]]
     stats = {
         "generated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "backtest": backtest_section(),
-        "crash": crash_section(cards, cards[0]["released"]),
+        # The crash chart needs the preorder period in our history, so newest set only.
+        "crash": crash_section(newest_cards, newest["released"]),
         "pipeline": pipeline_section(),
-        "set": {"name": cards[0]["set_name"], "cards": len(cards), "verdicts": verdicts,
-                "under_1": sum((c.get("price") or 0) < 1 for c in cards)},
+        "set": set_summary(newest["name"], newest_cards),
+        "sets": [set_summary(s["name"], [c for c in doc["cards"] if c["set"] == s["code"]]) for s in doc["sets"]],
     }
     OUT.write_text(json.dumps(stats, indent=1), encoding="utf-8")
     print(f"wrote {OUT}: {len(stats['crash']['series'])} crash days, "

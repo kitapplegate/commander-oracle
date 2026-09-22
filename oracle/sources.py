@@ -25,6 +25,17 @@ def _cached_json(path: Path, url: str, max_age_hours: float = 24) -> dict:
     return resp.json()
 
 
+def recent_expansions(n: int) -> list[dict]:
+    """The n newest released paper expansions (the sets people actually open packs of)."""
+    data = _cached_json(CACHE / "scryfall" / "sets.json", "https://api.scryfall.com/sets")
+    today = time.strftime("%Y-%m-%d")
+    sets = [s for s in data["data"] if s["set_type"] == "expansion" and not s.get("digital")
+            and s.get("released_at", "9999") <= today]
+    sets.sort(key=lambda s: s["released_at"], reverse=True)
+    return [{"code": s["code"], "name": s["name"], "released": s["released_at"],
+             "icon": s["icon_svg_uri"].split("?")[0]} for s in sets[:n]]
+
+
 def scryfall_set_cards(set_code: str) -> list[dict]:
     """All rare/mythic printings in a set, following Scryfall's pagination."""
     cards, page = [], 1
