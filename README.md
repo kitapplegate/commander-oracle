@@ -8,7 +8,7 @@ outlook. It combines daily price history, real EDHREC deck counts, and a set of
 judgments from [TypeSafe's Jev](https://docs.typesafe.ai) that read each card's
 rules text the way a Commander player would.
 
-![Commander Oracle showing The Hobbit's rares with Buy/Hold/Sell badges](docs/screenshot.jpg)
+![Commander Oracle: set picker for the five newest sets, Buy/Hold/Sell counts, and card tiles with prices and demand scores](docs/screenshot.jpg)
 
 > **Probabilities, not promises.** This is a hobby project and not financial advice.
 > The outlook weights are a starting guess and haven't been backtested yet (see
