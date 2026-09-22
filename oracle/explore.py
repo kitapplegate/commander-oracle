@@ -199,6 +199,16 @@ def main() -> None:
                     "both": sum(c.get("link_count", 0) >= 4 and c.get("played", 0) >= 0.5 for c in pool)},
         "ladder": pair_jev.QUESTIONS["synergy"].criteria,
         "examples": {"hit": example(hit), "miss": example(miss)},
+        # Every Jev-linked card with each real link (rung 2+), for the page's table.
+        "linked_cards": [{
+            "name": c["name"], "base": round(c["base"], 2), "after": round(c["after"], 2),
+            "change": round(c["change"], 4), "link_count": c["link_count"],
+            "rule_a": c["link_count"] >= 2 and c["base"] < 3,
+            "links": [{"new": names[r["partner"]], "rung": round(r["synergy"] * 4), "confidence": r["synergy_conf"],
+                       "build_around": r["draw"]}
+                      for r in sorted(links[c["oracle_id"]], key=lambda r: (-r["synergy"], -r["synergy_conf"]))
+                      if r["synergy"] >= backtest.LINK_THRESHOLD],
+        } for c in sorted(linked, key=lambda c: (-c["best"], -c["link_count"]))],
     }, indent=1), encoding="utf-8")
     print(f"\nwrote {OUT}")
 

@@ -1,6 +1,6 @@
 import { motion } from 'motion/react'
-import { useEffect, useState } from 'react'
-import type { ExploreDoc, Idea, JevExample, StatsDoc } from '../statsTypes'
+import { useEffect, useMemo, useState } from 'react'
+import type { ExploreDoc, Idea, JevExample, LinkedCard, StatsDoc } from '../statsTypes'
 import { money } from '../format'
 import { ColumnChart } from './charts/ColumnChart'
 import { HBarChart } from './charts/HBarChart'
@@ -61,6 +61,78 @@ function IdeaChart({ idea, market }: { idea: Idea; market: number }) {
   )
 }
 
+const RUNG_NAMES = ['None', 'Loose', 'Real', 'Strong', 'Combo']
+type TableSort = 'score' | 'links' | 'change'
+const TABLE_SORTS: Record<TableSort, { label: string; key: (c: LinkedCard) => number }> = {
+  score: { label: "Jev's score", key: c => c.links[0].rung * 10 + c.links[0].confidence },
+  links: { label: 'Most links', key: c => c.link_count },
+  change: { label: 'Biggest move', key: c => c.change },
+}
+const PAGE = 25
+
+function LinkedTable({ cards }: { cards: LinkedCard[] }) {
+  const [ruleOnly, setRuleOnly] = useState(false)
+  const [sort, setSort] = useState<TableSort>('score')
+  const [query, setQuery] = useState('')
+  const [limit, setLimit] = useState(PAGE)
+
+  const shown = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return cards
+      .filter(c => !ruleOnly || c.rule_a)
+      .filter(c => !q || c.name.toLowerCase().includes(q) || c.links.some(l => l.new.toLowerCase().includes(q)))
+      .sort((a, b) => TABLE_SORTS[sort].key(b) - TABLE_SORTS[sort].key(a))
+  }, [cards, ruleOnly, sort, query])
+  const ruleCount = cards.filter(c => c.rule_a).length
+
+  return (
+    <>
+      <div className="table-controls">
+        <input className="search" placeholder="Search a card, old or new…" value={query}
+               onChange={e => { setQuery(e.target.value); setLimit(PAGE) }} aria-label="Search linked cards" />
+        <div className="seg" role="group" aria-label="Which cards">
+          <button className={!ruleOnly ? 'on' : ''} onClick={() => { setRuleOnly(false); setLimit(PAGE) }}>All {cards.length}</button>
+          <button className={ruleOnly ? 'on' : ''} onClick={() => { setRuleOnly(true); setLimit(PAGE) }}>Rule A only ({ruleCount})</button>
+        </div>
+        <select value={sort} onChange={e => setSort(e.target.value as TableSort)} aria-label="Sort by">
+          {Object.entries(TABLE_SORTS).map(([k, s]) => <option key={k} value={k}>{s.label}</option>)}
+        </select>
+      </div>
+      <div className="table-wrap">
+        <table className="data-table">
+          <thead><tr><th>Older card</th><th>New Hobbit cards it links to · Jev's rung · confidence</th><th>Before</th><th>After</th><th>Change</th></tr></thead>
+          <tbody>
+            {shown.slice(0, limit).map(c => (
+              <tr key={c.name}>
+                <td>{c.name}{c.rule_a && <span className="rule-tag" title="Jev-linked, 2+ links, under $3">RULE A</span>}</td>
+                <td>
+                  <div className="link-chips">
+                    {c.links.map(l => (
+                      <span key={l.new} className={`chip${l.rung >= 3 ? ' strong' : ''}`}
+                            title={`Jev: ${RUNG_NAMES[l.rung]} synergy, ${Math.round(l.confidence * 100)}% confident. Chance players build around ${l.new}: ${Math.round(l.build_around * 100)}%`}>
+                        {l.new} <b>{l.rung} {RUNG_NAMES[l.rung]}</b> <span className="muted">{Math.round(l.confidence * 100)}%</span>
+                      </span>
+                    ))}
+                  </div>
+                </td>
+                <td>{money(c.base)}</td>
+                <td>{money(c.after)}</td>
+                <td className={c.change >= 0 ? 'pos' : 'neg'}>
+                  <span aria-hidden="true">{c.change >= 0 ? '▲' : '▼'}</span> {signed(c.change)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="showing">
+        Showing <strong>{Math.min(limit, shown.length)}</strong> of {shown.length}
+        {limit < shown.length && <> · <button className="link-btn inline" onClick={() => setLimit(limit + PAGE * 2)}>Show more</button></>}
+      </p>
+    </>
+  )
+}
+
 export function JevPage() {
   const [x, setX] = useState<ExploreDoc | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -117,6 +189,13 @@ export function JevPage() {
           ))}
         </div>
         <p className="chart-note">Across all {x.linked} cards Jev linked, it helps a lot as a group and it's weak on any single card. So I went looking for things that could tell those two apart before the set ever came out.</p>
+      </motion.section>
+
+      <motion.section className="block" {...reveal}>
+        <h2>Every card Jev linked</h2>
+        <p>Here's all {x.linked} of them. Each chip is a new Hobbit card, the rung Jev picked for that pair, and how sure it was. I only list rung 2 and up, "real synergy" or better, since that's where I drew the line for Jev-linked. Hover a chip and it also shows how likely Jev thinks players are to build a deck around that new card.</p>
+        <LinkedTable cards={x.linked_cards} />
+        <p className="chart-note">Jev never saw the before or after prices. Those columns are what actually happened, so you can check it yourself.</p>
       </motion.section>
 
       <motion.section className="block" {...reveal}>

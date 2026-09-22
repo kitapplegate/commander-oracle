@@ -87,4 +87,15 @@ export interface ExploreDoc {
   overlap: { four_plus_links: number; very_high_played: number; both: number }
   ladder: string[]
   examples: { hit: JevExample; miss: JevExample }
+  linked_cards: LinkedCard[]
+}
+
+export interface LinkedCard {
+  name: string
+  base: number
+  after: number
+  change: number
+  link_count: number
+  rule_a: boolean
+  links: { new: string; rung: number; confidence: number; build_around: number }[]
 }
