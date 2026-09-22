@@ -62,5 +62,13 @@ price floor at ingest; the UI filters.
   card. The text candidate finder alone barely beats the market; Jev's
   judgment is where the signal comes from. This is ONE event, so it needs
   replication before any weights depend on it.
-- Next: store our own daily prices (MTGJSON keeps only 90 days) so every future
-  set release or ban becomes a new test; then replicate on the next event.
+- 2026-09-22: Daily price pipeline live on the VPS (217.15.170.26) under its own
+  `oracle` user at `/opt/commander-oracle/app`. `commander-oracle-daily.timer`
+  runs daily at 07:00 UTC (MTGJSON updates ~06:15) and archives the raw daily
+  file; `commander-oracle-backfill.timer` runs on the 1st of each month to fill
+  gaps from the 90-day file. The `runs` table records ok/stale/backfill/failed.
+  Seeded with 89 days (2026-06-23 -> 2026-09-21), 31,697 cards priced, 1.2 GB.
+  Setup steps: `deploy/README.md`. The website isn't deployed yet; the domain
+  oracle.marzipan-solutions.com already resolves to the VPS (grey cloud).
+- Next: replicate the event backtest on the next set release or ban, using our
+  own history.
