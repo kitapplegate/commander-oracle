@@ -2,13 +2,11 @@
 so re-runs are cheap and we stay polite to free APIs."""
 from __future__ import annotations
 
-import gzip
 import json
 import re
 import time
 from pathlib import Path
 
-import ijson
 import requests
 
 DATA = Path(__file__).resolve().parent.parent / "data"
@@ -41,23 +39,11 @@ def scryfall_set_cards(set_code: str) -> list[dict]:
 
 
 def mtgjson_uuid_map(set_code: str) -> dict[str, str]:
-    """scryfallId -> MTGJSON uuid, needed to look up price history."""
+    """scryfallId -> MTGJSON uuid, needed to look up today's Card Kingdom prices."""
     data = _cached_json(CACHE / "mtgjson" / f"{set_code}.json",
                         f"https://mtgjson.com/api/v5/{set_code.upper()}.json", max_age_hours=24 * 7)
     return {c["identifiers"]["scryfallId"]: c["uuid"] for c in data["data"]["cards"]
             if c["identifiers"].get("scryfallId")}
-
-
-def price_histories(uuids: set[str]) -> dict[str, dict]:
-    """Stream the 150MB AllPrices file once, keeping only the cards we asked for."""
-    wanted, out = set(uuids), {}
-    with gzip.open(ALL_PRICES, "rb") as f:
-        for uuid, prices in ijson.kvitems(f, "data"):
-            if uuid in wanted:
-                out[uuid] = prices.get("paper", {})
-                if len(out) == len(wanted):
-                    break
-    return out
 
 
 def edhrec_slug(name: str) -> str:

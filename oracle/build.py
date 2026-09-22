@@ -1,14 +1,19 @@
 """Build data/cards.json for one or more sets.
 
     python -m oracle.build hob
+
+Prices come from our own history in data/universe.sqlite (kept current by
+oracle.daily), cheapest non-foil printing per card. Card Kingdom buylist/retail
+come from the newest archived daily MTGJSON file. Run oracle.daily first.
 """
 from __future__ import annotations
 
+import gzip
 import json
 import sys
 from datetime import datetime, timezone
 
-from . import signals, sources
+from . import daily, signals, sources, universe
 
 sys.stdout.reconfigure(encoding="utf-8")
 
@@ -49,16 +54,35 @@ def _oracle_text(c: dict) -> str:
     return "\n//\n".join(f.get("oracle_text", "") for f in c.get("card_faces", []))
 
 
+def _latest(vendor: dict, kind: str) -> float | None:
+    points = vendor.get(kind, {}).get("normal", {})
+    return float(points[max(points)]) if points else None
+
+
+def _todays_prices() -> dict[str, dict]:
+    """uuid -> paper prices from the newest archived AllPricesToday file."""
+    files = sorted(p for p in daily.ARCHIVE.glob("????-??-??.json.gz"))
+    if not files:
+        sys.exit("no archived daily price file; run `python -m oracle.daily` first")
+    with gzip.open(files[-1], "rb") as f:
+        return {uuid: p.get("paper", {}) for uuid, p in json.load(f)["data"].items()}
+
+
 def build(set_codes: list[str]) -> list[dict]:
+    db = universe.connect()
+    if not db.execute("SELECT 1 FROM prices LIMIT 1").fetchone():
+        sys.exit("price history is empty; run `python -m oracle.daily` first")
+    today = _todays_prices()
     rows = []
     for code in set_codes:
         cards = main_printings(sources.scryfall_set_cards(code))
         uuid_of = sources.mtgjson_uuid_map(code)
         print(f"{code}: {len(cards)} rare/mythic cards (main printings)")
-        histories = sources.price_histories({uuid_of[c["id"]] for c in cards if c["id"] in uuid_of})
         for i, c in enumerate(cards, 1):
             edh = sources.edhrec_card(c["name"])
-            paper = histories.get(uuid_of.get(c["id"], ""), {})
+            history = db.execute("SELECT day, price FROM prices WHERE oracle_id = ? ORDER BY day",
+                                 (c["oracle_id"],)).fetchall()
+            ck = today.get(uuid_of.get(c["id"], ""), {}).get("cardkingdom", {})
             rows.append({
                 "id": c["id"],
                 "name": c["name"],
@@ -76,7 +100,7 @@ def build(set_codes: list[str]) -> list[dict]:
                 "scryfall_url": c.get("scryfall_uri"),
                 "edhrec_url": edh["url"] if edh else None,
                 **signals.commander_signals(edh),
-                **signals.price_signals(paper),
+                **signals.price_signals(history, _latest(ck, "buylist"), _latest(ck, "retail")),
             })
             if i % 20 == 0:
                 print(f"  {i}/{len(cards)}")
