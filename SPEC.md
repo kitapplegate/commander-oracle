@@ -84,5 +84,11 @@ price floor at ingest; the UI filters.
   wins, the preorder crash (median rare at 4.6% of peak 38 days after release),
   and data freshness. `oracle/stats.py` -> `data/stats.json`, rebuilt daily in the
   unit; `data/backtest_hob.json` was copied to the VPS once (a fixed result).
+- 2026-09-22: Five newest expansions (hob, msh, sos, tmt, ecl; 388 rare/mythic cards),
+  picked automatically from Scryfall, so a new release rotates in and Jev judges it
+  in the daily run. Scope amended from "the most recent expansion(s)" to the 5 newest.
+  The peak is taken over the last 90 days; it's called the preorder peak only when
+  that window covers preorders (today only hob). Set picker and "Showing X of Y"
+  line in the UI. First server build took 6 minutes (EDHREC at 1 request/second).
 - Next: replicate the event backtest on the next set release or ban, using our
   own history.

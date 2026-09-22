@@ -2,8 +2,8 @@
 
 **You cracked a pack. Should you hold it, buy more, or sell it before it drops?**
 
-Commander Oracle ranks the rares and mythics from the newest Magic: The Gathering
-set by their long-term **Commander** demand, and gives each card a Buy / Hold / Sell
+Commander Oracle ranks the rares and mythics from the five newest Magic: The Gathering
+expansions by their long-term **Commander** demand, and gives each card a Buy / Hold / Sell
 outlook. It combines daily price history, real EDHREC deck counts, and a set of
 judgments from [TypeSafe's Jev](https://docs.typesafe.ai) that read each card's
 rules text the way a Commander player would.
@@ -74,11 +74,9 @@ pip install -r requirements.txt
 
 cp .env.example .env            # then paste your TYPESAFE_API_KEY into .env
 
-# MTGJSON's full price history (~150 MB, refreshed daily)
-mkdir -p data/raw
-curl -o data/raw/AllPrices.json.gz https://mtgjson.com/api/v5/AllPrices.json.gz
-
-python -m oracle.build hob      # any set code(s); "hob" is The Hobbit
+python -m oracle.daily --refresh   # card list + today's prices into data/universe.sqlite
+python -m oracle.daily --backfill  # ~90 days of price history
+python -m oracle.build            # the 5 newest expansions (or pass set codes)
 python -m oracle.judge          # asks Jev about each card, adds the outlook
 
 cd web
@@ -86,8 +84,8 @@ npm install
 npm run dev                     # http://localhost:5173
 ```
 
-A full run over one set (about 70 cards) takes a couple of minutes, most of it
-waiting on polite rate limits.
+The first build takes about 6 minutes, almost all of it EDHREC lookups throttled to one
+per second. After that everything is cached.
 
 ## Data sources and thanks
 
@@ -104,10 +102,10 @@ waiting on polite rate limits.
 - [ ] **Backtest.** Run the same pipeline on an older set as of ~60 days after its
       release, then compare the verdicts against what prices actually did. Only
       signals that beat a naive baseline keep their weight.
-- [ ] Multiple sets at once, and a set picker in the UI.
+- [x] The five newest sets, with a set picker. A new release rotates in automatically.
+- [x] Daily price pipeline and site refresh on a server (see `deploy/`).
 - [ ] Reprint-risk and ban-news signals: Jev reading announcements and
       r/mtgfinance posts.
-- [ ] Scheduled daily refresh and hosting.
 
 ## License
 
