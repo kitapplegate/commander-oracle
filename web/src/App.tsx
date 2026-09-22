@@ -1,0 +1,133 @@
+import { AnimatePresence, motion } from 'motion/react'
+import { useEffect, useMemo, useState } from 'react'
+import type { Card, CardsDoc } from './types'
+import { money, VERDICTS, verdictOf, type VerdictKey } from './format'
+import { CardTile } from './components/CardTile'
+import { DetailPanel } from './components/DetailPanel'
+
+type Sort = 'demand' | 'price' | 'week' | 'edh'
+const SORTS: Record<Sort, { label: string; key: (c: Card) => number }> = {
+  demand: { label: 'Commander demand', key: c => c.outlook?.demand ?? -1 },
+  price: { label: 'Price', key: c => c.price ?? -1 },
+  week: { label: 'This week', key: c => c.change_7d ?? -999 },
+  edh: { label: 'EDHREC decks', key: c => c.edh_decks ?? -1 },
+}
+const MIN_PRICES = [0, 1, 5, 10]
+const TILES: VerdictKey[] = ['buy', 'hold', 'sell']
+
+export default function App() {
+  const [doc, setDoc] = useState<CardsDoc | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [verdict, setVerdict] = useState<VerdictKey | 'all'>('all')
+  const [minPrice, setMinPrice] = useState(1)
+  const [sort, setSort] = useState<Sort>('demand')
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState<Card | null>(null)
+
+  useEffect(() => {
+    fetch('/cards.json')
+      .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then(setDoc)
+      .catch(e => setError(String(e)))
+  }, [])
+
+  const inRange = useMemo(
+    () => (doc?.cards ?? []).filter(c => (c.price ?? 0) >= minPrice),
+    [doc, minPrice],
+  )
+  const counts = useMemo(() => {
+    const out: Record<string, number> = {}
+    inRange.forEach(c => { const v = verdictOf(c); out[v] = (out[v] ?? 0) + 1 })
+    return out
+  }, [inRange])
+  const shown = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return inRange
+      .filter(c => verdict === 'all' || verdictOf(c) === verdict)
+      .filter(c => !q || c.name.toLowerCase().includes(q) || c.type_line.toLowerCase().includes(q))
+      .sort((a, b) => SORTS[sort].key(b) - SORTS[sort].key(a))
+  }, [inRange, verdict, query, sort])
+
+  const topPick = useMemo(
+    () => inRange.filter(c => verdictOf(c) === 'buy').sort((a, b) => b.outlook!.demand - a.outlook!.demand)[0],
+    [inRange],
+  )
+
+  if (error) return <div className="state">Couldn't load cards.json ({error}). Run <code>python -m oracle.build</code> first.</div>
+  if (!doc) return <div className="state"><div className="orb" /> Consulting the oracle…</div>
+
+  return (
+    <div className="app">
+      <div className="bg-glow" aria-hidden="true" />
+      <header className="hero">
+        <motion.p className="eyebrow" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          {[...new Set(doc.cards.map(c => c.set_name))].join(' · ')} · rares &amp; mythics
+        </motion.p>
+        <motion.h1 initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+          Commander <span>Oracle</span>
+        </motion.h1>
+        <motion.p className="lede" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}>
+          You cracked a pack. Hold it, buy more, or sell it before it drops?
+        </motion.p>
+      </header>
+
+      <section className="summary">
+        {TILES.map((v, i) => (
+          <motion.button key={v} className={`sum sum-${v}${verdict === v ? ' active' : ''}`}
+                         onClick={() => setVerdict(verdict === v ? 'all' : v)}
+                         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                         transition={{ delay: 0.3 + i * 0.08 }} whileHover={{ y: -3 }}
+                         aria-pressed={verdict === v}>
+            <span className="sum-icon" aria-hidden="true">{VERDICTS[v].icon}</span>
+            <span className="sum-count">{counts[v] ?? 0}</span>
+            <span className="sum-label">{VERDICTS[v].label}</span>
+          </motion.button>
+        ))}
+        {topPick && (
+          <motion.button className="sum sum-pick" onClick={() => setOpen(topPick)}
+                         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                         transition={{ delay: 0.55 }} whileHover={{ y: -3 }}
+                         style={{ backgroundImage: topPick.image.art ? `url(${topPick.image.art})` : undefined }}>
+            <span className="sum-pick-fade" />
+            <span className="sum-pick-text">
+              <span className="eyebrow">Top pick</span>
+              <strong>{topPick.name.split(' // ')[0]}</strong>
+              <span>{money(topPick.price)}</span>
+            </span>
+          </motion.button>
+        )}
+      </section>
+
+      <section className="controls">
+        <input className="search" placeholder="Search cards or types…" value={query}
+               onChange={e => setQuery(e.target.value)} aria-label="Search" />
+        <div className="seg" role="group" aria-label="Minimum price">
+          {MIN_PRICES.map(p => (
+            <button key={p} className={minPrice === p ? 'on' : ''} onClick={() => setMinPrice(p)}>
+              {p === 0 ? 'All' : `$${p}+`}
+            </button>
+          ))}
+        </div>
+        <select value={sort} onChange={e => setSort(e.target.value as Sort)} aria-label="Sort by">
+          {Object.entries(SORTS).map(([k, s]) => <option key={k} value={k}>{s.label}</option>)}
+        </select>
+        {verdict !== 'all' && <button className="link-btn" onClick={() => setVerdict('all')}>Clear filter</button>}
+      </section>
+
+      <motion.main className="grid" layout>
+        <AnimatePresence mode="popLayout">
+          {shown.map((c, i) => <CardTile key={c.id} card={c} index={i} onOpen={setOpen} />)}
+        </AnimatePresence>
+      </motion.main>
+      {shown.length === 0 && <p className="state">No cards match. Try lowering the price floor.</p>}
+
+      <footer className="foot">
+        <p>Prices: TCGplayer via MTGJSON · Commander data: EDHREC · Card images: Scryfall · Judgments: TypeSafe Jev</p>
+        <p>Probabilities, not promises. The outlook weights haven't been backtested yet. Updated {new Date(doc.generated).toLocaleString()}.</p>
+        <p>Unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.</p>
+      </footer>
+
+      <AnimatePresence>{open && <DetailPanel key={open.id} card={open} onClose={() => setOpen(null)} />}</AnimatePresence>
+    </div>
+  )
+}

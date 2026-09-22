@@ -40,4 +40,12 @@ price floor at ingest; the UI filters.
 
 ## Status log
 
-- 2026-09-21: Repo created. Slice 1: data pipeline without Jev.
+- 2026-09-21: Repo created. Slice 1: data pipeline without Jev (The Hobbit, 68
+  cards, all priced, 64 with EDHREC data). Slice 2: four Jev questions over
+  the rules text only (`oracle/jev.py`), plus a code-side outlook (`oracle/outlook.py`,
+  weights UNVALIDATED). Result: 4 buy / 59 hold / 5 sell. Jev's "power" Score
+  clusters between 0.50 and 0.69, so watch whether it earns its weight. Slice 3:
+  React + Vite + motion web app (`web/`) reading `cards.json`, checked in Chrome at
+  desktop and 400px widths. Prepared to become a public repo (MIT, with the WotC
+  Fan Content Policy notice).
+- Next: backtest on an older set before trusting or tuning any weights.
