@@ -40,18 +40,31 @@ cd /opt/commander-oracle/app && sudo -u oracle git pull -q && sudo -u oracle .ve
 
 # Deploying the website
 
-The site is a static Vite build served by Caddy at oracle.marzipan-solutions.com.
-`npm run build` copies `data/cards.json` into `web/dist/` next to the app.
+The site is a static Vite build served by Caddy at oracle.marzipan-solutions.com,
+from `/var/www/oracle.marzipan-solutions.com`:
+
+- `index.html`, `assets/`, `favicon.svg`: owned by root, changed only by a deploy
+- `data/cards.json`: in a folder owned by `oracle`; the daily unit rebuilds
+  and publishes it (`oracle.build` -> `oracle.judge` -> `oracle.publish`).
+  `oracle.publish` refuses empty or unjudged builds, so the site keeps its last
+  good data.
+
+Deploying frontend changes:
 
 ```sh
 cd web && npm run build && cd dist && tar czf - . > ../../site.tgz && cd ../..
 scp site.tgz root@<vps>:/tmp/oracle-site.tgz
-ssh root@<vps> 'tar xzf /tmp/oracle-site.tgz -C /var/www/oracle.marzipan-solutions.com && rm /tmp/oracle-site.tgz'
+# on the server: extract to a temp dir, copy assets/, favicon.svg and index.html into
+# the web root as root; leave data/ alone (the pipeline owns it)
 ```
 
 The Caddy block lives at the end of `/etc/caddy/Caddyfile` (backup:
 `Caddyfile.bak-oracle-*`). That file serves every site on the box, so always run
 `caddy validate --config /etc/caddy/Caddyfile` before `systemctl reload caddy`.
 
-For now the site's `cards.json` is a snapshot built on a desktop. The daily price
-pipeline doesn't rebuild it yet.
+## The TypeSafe key on the server
+
+`oracle.judge` needs `TYPESAFE_API_KEY` only when a card isn't in
+`data/jev_cache.json` yet. It lives in `/opt/commander-oracle/app/.env`: mode
+600, owner `oracle`, inside a 750 home directory that Caddy can't read. It is
+never written to the web root, the logs, or git.

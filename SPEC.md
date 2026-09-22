@@ -74,5 +74,9 @@ price floor at ingest; the UI filters.
   in /var/www/oracle.marzipan-solutions.com with a Caddy block (backed up first,
   validated, all other sites checked after reload). cards.json is a static snapshot
   from 2026-09-22 00:32 UTC; the daily pipeline does not refresh it yet.
+- 2026-09-22: The site data now refreshes daily on the VPS: the daily unit runs
+  prices -> build (from our own price DB) -> judge (Jev cache; the key is in a mode-600
+  .env) -> publish into the web root's oracle-owned `data/` folder. Checked that
+  the key is absent from the site, the public repo history, and the server logs.
 - Next: replicate the event backtest on the next set release or ban, using our
   own history.
