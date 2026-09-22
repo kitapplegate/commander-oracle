@@ -13,6 +13,8 @@ ExecStart=/opt/commander-oracle/app/.venv/bin/python -m oracle.daily
 ExecStart=/opt/commander-oracle/app/.venv/bin/python -m oracle.build hob
 # Asks Jev only about cards missing from data/jev_cache.json (needs TYPESAFE_API_KEY in .env).
 ExecStart=/opt/commander-oracle/app/.venv/bin/python -m oracle.judge
+# Stats page data; reads data/backtest_hob.json (a fixed result, copied once from oracle.backtest).
+ExecStart=/opt/commander-oracle/app/.venv/bin/python -m oracle.stats
 ExecStart=/opt/commander-oracle/app/.venv/bin/python -m oracle.publish /var/www/oracle.marzipan-solutions.com/data
 Nice=10
 # Shares the VPS with other live apps: cap memory and time.

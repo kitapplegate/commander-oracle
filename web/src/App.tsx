@@ -4,6 +4,7 @@ import type { Card, CardsDoc } from './types'
 import { money, VERDICTS, verdictOf, type VerdictKey } from './format'
 import { CardTile } from './components/CardTile'
 import { DetailPanel } from './components/DetailPanel'
+import { StatsPage } from './components/StatsPage'
 
 type Sort = 'demand' | 'price' | 'week' | 'edh'
 const SORTS: Record<Sort, { label: string; key: (c: Card) => number }> = {
@@ -15,7 +16,7 @@ const SORTS: Record<Sort, { label: string; key: (c: Card) => number }> = {
 const MIN_PRICES = [0, 1, 5, 10]
 const TILES: VerdictKey[] = ['buy', 'hold', 'sell']
 
-export default function App() {
+function CardsPage() {
   const [doc, setDoc] = useState<CardsDoc | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [verdict, setVerdict] = useState<VerdictKey | 'all'>('all')
@@ -58,8 +59,7 @@ export default function App() {
   if (!doc) return <div className="state"><div className="orb" /> Consulting the oracle…</div>
 
   return (
-    <div className="app">
-      <div className="bg-glow" aria-hidden="true" />
+    <>
       <header className="hero">
         <motion.p className="eyebrow" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           {[...new Set(doc.cards.map(c => c.set_name))].join(' · ')} · rares &amp; mythics
@@ -124,11 +124,39 @@ export default function App() {
 
       <footer className="foot">
         <p>Prices: TCGplayer via MTGJSON · Commander data: EDHREC · Card images: Scryfall · Judgments: TypeSafe Jev</p>
-        <p>Probabilities, not promises. The outlook weights haven't been backtested yet. Updated {new Date(doc.generated).toLocaleString()}.</p>
-        <p>Unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.</p>
+        <p>Probabilities, not promises. The per-card verdict weights haven't been backtested yet (<a href="#/stats">see the stats</a>). Updated {new Date(doc.generated).toLocaleString()}.</p>
       </footer>
 
       <AnimatePresence>{open && <DetailPanel key={open.id} card={open} onClose={() => setOpen(null)} />}</AnimatePresence>
+    </>
+  )
+}
+
+type Route = 'cards' | 'stats'
+const routeOf = (): Route => (window.location.hash.startsWith('#/stats') ? 'stats' : 'cards')
+
+export default function App() {
+  const [route, setRoute] = useState<Route>(routeOf)
+  useEffect(() => {
+    const onHash = () => { setRoute(routeOf()); window.scrollTo({ top: 0 }) }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
+  return (
+    <div className="app">
+      <div className="bg-glow" aria-hidden="true" />
+      <nav className="nav">
+        <a href="#/" className="nav-brand">Commander <span>Oracle</span></a>
+        <div className="nav-links">
+          <a href="#/" className={route === 'cards' ? 'on' : ''}>Cards</a>
+          <a href="#/stats" className={route === 'stats' ? 'on' : ''}>How it works &amp; stats</a>
+        </div>
+      </nav>
+      {route === 'stats' ? <StatsPage /> : <CardsPage />}
+      <footer className="foot">
+        <p>Unofficial Fan Content permitted under the Fan Content Policy. Not approved/endorsed by Wizards. Portions of the materials used are property of Wizards of the Coast. ©Wizards of the Coast LLC.</p>
+      </footer>
     </div>
   )
 }

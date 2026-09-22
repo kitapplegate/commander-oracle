@@ -154,9 +154,15 @@ def main() -> None:
                   "windows": {"base": BASE, "after": AFTER, "peak": PEAK}},
         "groups": table, "spearman": {"rho": rho, "p": rho_p},
         "permutation_p": {"linked_vs_text": p_linked_vs_text, "linked_vs_market": p_linked_vs_market},
-        "linked": [{"name": c["name"], "partner": names[c["jev"]["partner"]], **c["jev"],
+        "counts": {"new_cards": len(new_cards), "pool": len(pool), "pairs": len(cand) * K,
+                   "link_threshold": LINK_THRESHOLD, "min_base_price": MIN_BASE_PRICE},
+        # partner goes after **jev, whose own "partner" is the oracle id, not the name
+        "linked": [{"name": c["name"], **c["jev"], "partner": names[c["jev"]["partner"]],
                     "base": c["base"], "after": c["after"], "change": c["change"], "peak_change": c["peak_change"]}
                    for c in sorted(groups["linked"], key=lambda c: -c["jev"]["synergy"])],
+        # every candidate, compact, for the stats page scatter: [synergy, change, name, partner]
+        "candidates": [[c["jev"]["synergy"], round(c["change"], 4), c["name"], names[c["jev"]["partner"]]]
+                       for c in cands],
     }, indent=1), encoding="utf-8")
     print(f"\nwrote {OUT}")
 
