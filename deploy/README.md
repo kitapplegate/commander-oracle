@@ -37,3 +37,21 @@ shows as a failed unit in `systemctl`.
 ```sh
 cd /opt/commander-oracle/app && sudo -u oracle git pull -q && sudo -u oracle .venv/bin/pip install -q -r requirements.txt
 ```
+
+# Deploying the website
+
+The site is a static Vite build served by Caddy at oracle.marzipan-solutions.com.
+`npm run build` copies `data/cards.json` into `web/dist/` next to the app.
+
+```sh
+cd web && npm run build && cd dist && tar czf - . > ../../site.tgz && cd ../..
+scp site.tgz root@<vps>:/tmp/oracle-site.tgz
+ssh root@<vps> 'tar xzf /tmp/oracle-site.tgz -C /var/www/oracle.marzipan-solutions.com && rm /tmp/oracle-site.tgz'
+```
+
+The Caddy block lives at the end of `/etc/caddy/Caddyfile` (backup:
+`Caddyfile.bak-oracle-*`). That file serves every site on the box, so always run
+`caddy validate --config /etc/caddy/Caddyfile` before `systemctl reload caddy`.
+
+For now the site's `cards.json` is a snapshot built on a desktop. The daily price
+pipeline doesn't rebuild it yet.

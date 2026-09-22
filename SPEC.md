@@ -70,5 +70,9 @@ price floor at ingest; the UI filters.
   Seeded with 89 days (2026-06-23 -> 2026-09-21), 31,697 cards priced, 1.2 GB.
   Setup steps: `deploy/README.md`. The website isn't deployed yet; the domain
   oracle.marzipan-solutions.com already resolves to the VPS (grey cloud).
+- 2026-09-22: Website live at https://oracle.marzipan-solutions.com: a static build
+  in /var/www/oracle.marzipan-solutions.com with a Caddy block (backed up first,
+  validated, all other sites checked after reload). cards.json is a static snapshot
+  from 2026-09-22 00:32 UTC; the daily pipeline does not refresh it yet.
 - Next: replicate the event backtest on the next set release or ban, using our
   own history.
