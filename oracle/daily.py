@@ -44,6 +44,7 @@ UNKNOWN_JUMP_THRESHOLD = 300
 
 
 def _download(url: str, dest) -> None:
+    dest.parent.mkdir(parents=True, exist_ok=True)
     tmp = dest.with_suffix(dest.suffix + ".part")
     with requests.get(url, headers=HEADERS, stream=True, timeout=120) as r:
         r.raise_for_status()

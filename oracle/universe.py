@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS runs (started TEXT, price_day TEXT, status TEXT, card
 
 
 def connect() -> sqlite3.Connection:
+    PRINTINGS.parent.mkdir(parents=True, exist_ok=True)  # data/ is gitignored, so absent on a fresh clone
     db = sqlite3.connect(UNIVERSE)
     db.executescript(SCHEMA)
     return db
