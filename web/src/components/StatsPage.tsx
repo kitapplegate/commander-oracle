@@ -242,10 +242,11 @@ export function StatsPage() {
       <motion.section className="block" {...reveal}>
         <p className="eyebrow">The test</p>
         <h2>Testing it on The Hobbit</h2>
-        <p>When <strong>The Hobbit</strong> came out on {shortDate(bt.event.date)}, code found {bt.counts.pairs.toLocaleString()} possible pairings between its {bt.counts.new_cards} new rares and older cards,
+        <p>This one looks back. <strong>The Hobbit</strong> came out on {shortDate(bt.event.date)}, and in September I went back to it. Code found {bt.counts.pairs.toLocaleString()} possible pairings between its {bt.counts.new_cards} new rares and older cards,
           and Jev scored every pair on one question: <em>how much does the new card make the older one worth playing?</em> Then I compared prices from before preorders
           ({shortDate(bt.event.windows.base[0])}–{shortDate(bt.event.windows.base[1])}) to about a month after release ({shortDate(bt.event.windows.after[0])}–{shortDate(bt.event.windows.after[1])}).
           I wrote the rules down before I looked at a single result, so I couldn't keep tweaking them until the chart looked good.</p>
+        <p className="muted">Jev never saw a price, but I ran this after the prices had already moved, and I can't rule out that it picked up some talk about these cards somewhere. That's why the real test is the rule I locked in on the <a href="#/jev">Jev lab</a> page, which gets checked on the next set before it comes out.</p>
 
         <div className="chart-card">
           <div className="chart-card-head">
