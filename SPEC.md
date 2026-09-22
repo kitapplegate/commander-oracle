@@ -78,5 +78,11 @@ price floor at ingest; the UI filters.
   prices -> build (from our own price DB) -> judge (Jev cache; the key is in a mode-600
   .env) -> publish into the web root's oracle-owned `data/` folder. Checked that
   the key is absent from the site, the public repo history, and the server logs.
+- 2026-09-22: Stats page live at `#/stats`: methodology, the four Jev questions,
+  the verdict formula, Hobbit backtest charts (group bars; hit rate by Jev synergy
+  bucket, which rises 11.9% -> 16.5% -> 17.4% -> 21.2% -> 30.3%), top links and biggest
+  wins, the preorder crash (median rare at 4.6% of peak 38 days after release),
+  and data freshness. `oracle/stats.py` -> `data/stats.json`, rebuilt daily in the
+  unit; `data/backtest_hob.json` was copied to the VPS once (a fixed result).
 - Next: replicate the event backtest on the next set release or ban, using our
   own history.
