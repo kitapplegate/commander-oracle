@@ -86,7 +86,7 @@ export function StatsPage() {
         <motion.h1 className="h1-small" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
           How the <span>Oracle</span> decides
         </motion.h1>
-        <p className="lede">What goes in, what Jev judges, and whether it works: tested against real prices.</p>
+        <p className="lede">This is what goes in, what I ask Jev, and whether any of it works. I checked it against real prices and put all the numbers here, the misses too.</p>
       </header>
 
       <motion.section className="kpi-row" {...reveal}>
@@ -101,22 +101,22 @@ export function StatsPage() {
         <h2>How it works</h2>
         <div className="flow">
           <div className="flow-step"><span className="flow-n">1</span><strong>Collect</strong>
-            <p>Every day at 07:00 UTC: prices for {s.pipeline.cards_tracked.toLocaleString()} Commander-legal cards (MTGJSON / TCGplayer), card text and art (Scryfall), and Commander deck counts (EDHREC).</p></div>
+            <p>Once a day the server pulls prices for {s.pipeline.cards_tracked.toLocaleString()} Commander-legal cards from MTGJSON, card text and art from Scryfall, and how many Commander decks run each card from EDHREC. MTGJSON only keeps 90 days of prices, so I keep my own history and it gets a day longer every morning.</p></div>
           <div className="flow-arrow" aria-hidden="true">→</div>
           <div className="flow-step"><span className="flow-n">2</span><strong>Judge</strong>
-            <p>TypeSafe's <em>Jev</em> reads each card's rules text and answers narrow questions with calibrated probabilities. It never sees prices.</p></div>
+            <p>TypeSafe's <em>Jev</em> reads the rules text on each card and answers a few narrow questions with a probability. It never sees a price, only the words on the card.</p></div>
           <div className="flow-arrow" aria-hidden="true">→</div>
           <div className="flow-step"><span className="flow-n">3</span><strong>Decide</strong>
-            <p>Plain code combines Jev's answers with price trends and EDHREC adoption into a demand score and a Buy / Hold / Sell call.</p></div>
+            <p>Then plain old code with no AI in it mixes Jev's answers with the price trend and the EDHREC numbers into a demand score, and that score turns into Buy, Hold or Sell.</p></div>
           <div className="flow-arrow" aria-hidden="true">→</div>
           <div className="flow-step"><span className="flow-n">4</span><strong>Test</strong>
-            <p>Every signal is checked against what prices actually did after a real event, like a new set's release.</p></div>
+            <p>Every signal gets checked against what prices really did after something happened, like a new set coming out. So far that's one set.</p></div>
         </div>
       </motion.section>
 
       <motion.section className="block" {...reveal}>
         <h2>What Jev is asked</h2>
-        <p className="muted">Jev is a "System One" model: it returns typed answers and probabilities, not paragraphs. Each card gets four questions, judged from its rules text alone:</p>
+        <p className="muted">Jev is what TypeSafe calls a "System One" model. I ask it a question and I get back an answer and a probability instead of a paragraph. Every card gets the same four questions and all it has to go on is the rules text:</p>
         <div className="q-grid">
           <div className="q-card"><h3>Deck breadth</h3><p>Would nearly every deck in its colors want it, or only one narrow tribe?</p><span className="q-type">Score, 5 levels</span></div>
           <div className="q-card"><h3>Power</h3><p>How strong is it for its cost at a casual-to-focused Commander table?</p><span className="q-type">Score, 5 levels</span></div>
@@ -131,18 +131,18 @@ export function StatsPage() {
             <li><span className="v v-sell">▼ Sell</span> demand under 35 (or under 45 and still sliding), and worth at least $2</li>
             <li><span className="v v-hold">◆ Hold</span> everything else</li>
           </ul>
-          <p className="muted small">These per-card weights are a starting guess and haven't been validated yet. The test below checks a different Jev question: which <em>older</em> cards a new set makes better.</p>
+          <p className="muted small">These weights are my starting guess and I haven't tested them yet. Jev's Power score also bunches up between 0.50 and 0.69 on almost everything, so it barely separates one card from another right now. The test below is a different Jev question: which <em>older</em> cards a new set makes better.</p>
         </div>
       </motion.section>
 
       {/* ---------------- backtest ---------------- */}
       <motion.section className="block" {...reveal}>
         <p className="eyebrow">The test</p>
-        <h2>Does Jev spot the cards a new set pumps?</h2>
-        <p>When <strong>The Hobbit</strong> released on {shortDate(bt.event.date)}, code found {bt.counts.pairs.toLocaleString()} possible pairings between its {bt.counts.new_cards} new rares and older cards,
-          and Jev scored each pair: <em>how much does the new card make the older one worth playing?</em> Then we compared prices from before preorders
-          ({shortDate(bt.event.windows.base[0])}–{shortDate(bt.event.windows.base[1])}) to a month after release ({shortDate(bt.event.windows.after[0])}–{shortDate(bt.event.windows.after[1])}).
-          The rules were fixed before looking at any result.</p>
+        <h2>Testing it on The Hobbit</h2>
+        <p>When <strong>The Hobbit</strong> came out on {shortDate(bt.event.date)}, code found {bt.counts.pairs.toLocaleString()} possible pairings between its {bt.counts.new_cards} new rares and older cards,
+          and Jev scored every pair on one question: <em>how much does the new card make the older one worth playing?</em> Then I compared prices from before preorders
+          ({shortDate(bt.event.windows.base[0])}–{shortDate(bt.event.windows.base[1])}) to about a month after release ({shortDate(bt.event.windows.after[0])}–{shortDate(bt.event.windows.after[1])}).
+          I wrote the rules down before I looked at a single result, so I couldn't keep tweaking them until the chart looked good.</p>
 
         <div className="chart-card">
           <div className="chart-card-head">
@@ -165,16 +165,16 @@ export function StatsPage() {
             }))}
           />
           <p className="chart-note">
-            <strong>Market</strong>: the other {market.n.toLocaleString()} older cards (not reprinted, worth $0.50+).
-            <strong> Text match only</strong>: the code flagged them, but Jev said the link was weak.
-            <strong> Jev-linked</strong>: Jev scored real synergy or better.
+            <strong>Market</strong> is the other {market.n.toLocaleString()} older cards that weren't reprinted and were worth at least 50 cents.
+            <strong> Text match only</strong> means the code flagged them but Jev said the link was weak.
+            <strong> Jev-linked</strong> means Jev called it real synergy or better.
           </p>
         </div>
 
         <div className="callouts">
-          <div className="callout"><strong>{linked.share_up_25}%</strong> of Jev-linked cards rose 25%+, versus {market.share_up_25}% of the market.</div>
-          <div className="callout"><strong>{odds(bt.permutation_p.linked_vs_text)}</strong> chance that luck explains the gap between Jev-linked and text-only cards.</div>
-          <div className="callout"><strong>The text match alone barely beat the market.</strong> Jev's judgment is what separated the winners.</div>
+          <div className="callout"><strong>{linked.share_up_25}%</strong> of the cards Jev linked went up 25% or more. For the rest of the market it was {market.share_up_25}%.</div>
+          <div className="callout"><strong>{odds(bt.permutation_p.linked_vs_text)}</strong> odds that plain luck made the gap between the Jev-linked cards and the text-only ones.</div>
+          <div className="callout"><strong>Matching on text alone barely beat the market.</strong> The cards that pulled ahead were the ones Jev picked out.</div>
         </div>
       </motion.section>
 
@@ -191,7 +191,7 @@ export function StatsPage() {
               detail: `${b.label}: ${b.share_up_25}% rose 25%+ · median ${b.median_change > 0 ? '+' : ''}${b.median_change}%`,
             }))}
           />
-          <p className="chart-note">Each column holds all candidate pairings whose best Jev score fell in that range. Jev's strongest links rose 25%+ at roughly twice the market rate.</p>
+          <p className="chart-note">Each column is every candidate card whose best Jev score landed in that range. The strongest links went up 25% or more at about twice the market rate.</p>
         </div>
       </motion.section>
 
@@ -206,16 +206,16 @@ export function StatsPage() {
         {tab === 'wins'
           ? <LinkTable rows={bt.biggest_wins} showSynergy />
           : <LinkTable rows={bt.top_links} showSynergy />}
-        <p className="chart-note">"Strongest links" shows the misses too: most high-scoring cards moved a little, and some fell.</p>
+        <p className="chart-note">I left the misses in the strongest links list. Most of the high scorers only moved a little and some of them went down.</p>
       </motion.section>
 
       <motion.section className="block caveats" {...reveal}>
-        <h2>Honest caveats</h2>
+        <h2>Where this falls short</h2>
         <ul>
-          <li><strong>It raises the odds; it doesn't pick winners.</strong> {Math.round(100 - linked.share_up_25)}% of Jev-linked cards did <em>not</em> rise 25%. Per card, the correlation is weak (ρ = {bt.spearman.rho.toFixed(2)}). Treat it as a watch list.</li>
-          <li><strong>One event so far.</strong> The Hobbit is heavy on tribes (Dwarves, Wolves). The pipeline now saves prices daily, so each new set and each ban becomes another test.</li>
-          <li><strong>Reprints were excluded</strong>, because a reprint drops a card's price for reasons unrelated to synergy.</li>
-          <li><strong>Not financial advice.</strong> Card prices are noisy, thin markets.</li>
+          <li><strong>It helps across a group of cards, and it's weak on any one card.</strong> {Math.round(100 - linked.share_up_25)}% of the Jev-linked cards didn't go up 25%, and card by card the correlation is weak (ρ = {bt.spearman.rho.toFixed(2)}). It's a watch list.</li>
+          <li><strong>It's one event.</strong> The Hobbit leans hard on tribes like Dwarves and Wolves. The server saves prices every day now, so every new set and every ban is another chance to test it.</li>
+          <li><strong>I threw out reprints</strong>, because a reprint drops a card's price for reasons that have nothing to do with synergy.</li>
+          <li><strong>Not financial advice.</strong> Card prices are noisy and the markets are thin.</li>
         </ul>
       </motion.section>
 
@@ -226,9 +226,9 @@ export function StatsPage() {
         <div className="chart-card">
           <h3>A typical {s.set.name} rare's price, as a % of its own peak</h3>
           <CrashChart series={s.crash.series} />
-          <p className="chart-note">The line is the median of all {s.crash.cards} rares and mythics; the shaded band covers the middle half.
-            {` ${lastCrash.since_release}`} days after release, the typical card sells for {lastCrash.median}% of its preorder peak, and {s.set.under_1} of {s.set.cards} are under $1.
-            That's why the Oracle waits for a card to bottom out before calling it a Buy.</p>
+          <p className="chart-note">The line is the median of all {s.crash.cards} rares and mythics, and the shaded band is the middle half of them.
+            {` ${lastCrash.since_release}`} days after release the typical card sells for {lastCrash.median}% of its preorder peak, and {s.set.under_1} of the {s.set.cards} are under $1.
+            That's why the Oracle waits for a card to bottom out before it calls it a Buy.</p>
         </div>
       </motion.section>
 
@@ -239,7 +239,7 @@ export function StatsPage() {
           <Kpi value={`${shortDate(s.pipeline.history_from)} – ${shortDate(s.pipeline.history_to)}`} label="price history range" />
           <Kpi value={s.pipeline.last_ok_run ? new Date(s.pipeline.last_ok_run).toLocaleDateString() : '—'} label="last successful price run" />
         </div>
-        <p className="muted small">Sources: MTGJSON (TCGplayer and Card Kingdom prices), Scryfall (card data and images), EDHREC (Commander deck counts), TypeSafe Jev (judgments). The code is open source on{' '}
+        <p className="muted small">The data comes from MTGJSON (TCGplayer and Card Kingdom prices), Scryfall (card data and images), EDHREC (Commander deck counts) and TypeSafe's Jev (the judging). I looked at MTGGoldfish for older price history, but their terms say personal use only, so none of it is in here. All the code is on{' '}
           <a href="https://github.com/kitapplegate/commander-oracle" target="_blank" rel="noreferrer">GitHub</a>.</p>
       </motion.section>
     </div>
