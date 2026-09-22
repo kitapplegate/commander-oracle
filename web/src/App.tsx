@@ -152,7 +152,7 @@ function CardsPage() {
 
       <footer className="foot">
         <p>Prices: TCGplayer via MTGJSON · Commander data: EDHREC · Card images: Scryfall · Judgments: TypeSafe Jev</p>
-        <p>Probabilities, not promises. The per-card verdict weights haven't been backtested yet (<a href="#/stats">see the stats</a>). Updated {new Date(doc.generated).toLocaleString()}.</p>
+        <p>Probabilities, not promises. The verdicts come from how prices have actually behaved and get re-checked every week (<a href="#/stats">see the stats</a>). Updated {new Date(doc.generated).toLocaleString()}.</p>
       </footer>
 
       <AnimatePresence>{open && <DetailPanel key={open.id} card={open} onClose={() => setOpen(null)} />}</AnimatePresence>

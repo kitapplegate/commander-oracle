@@ -48,6 +48,8 @@ def price_signals(retail: list[tuple[str, float]], released: str, bl_now: float 
         "peak": peak,
         "peak_day": peak_day,
         "off_peak": pct(price, peak),
+        # How far above its window low: new cards well off their low tend to fall back.
+        "off_low": pct(price, min(p for _, p in points)),
         "peak_is_preorder": preorder_covered,
         # Card Kingdom's buylist as a share of its own retail: how badly a dealer
         # wants the card. Around 0.5+ is strong demand; low means they're stocked up.

@@ -123,9 +123,8 @@ function ReplaySection({ r }: { r: ReplayDoc }) {
       )}
       <div className="caveats">
         <ul>
-          <li><strong>Sell had a small edge in the first replay (Sep 22).</strong> Cards it called Sell went down more often than the average card, but the whole market was sliding, so it's a small edge.</li>
-          <li><strong>Hold was basically the market.</strong> Almost every card lands there, so it doesn't tell you much yet.</li>
-          <li><strong>Buy was buying bounces.</strong> The first replay on Sep 22 caught it: the rule only checked that a card wasn't still dropping, so a card that jumped 30 to 67% in a week counted as "stable". Those picks fell 27 to 45% afterward. Now a card has to be flat that week, between −5% and +10%. That took three bad picks out, but on Sep 22 the ones left still lost money, so it isn't fixed yet.</li>
+          <li><strong>The old Buy was buying bounces.</strong> The first replay on Sep 22 caught it: a card that jumped 30 to 67% in a week counted as "stable", and those picks fell 27 to 45% afterward. That led to the study above and the new rules.</li>
+          <li><strong>The replay covers the same weeks the new rules came from</strong>, so for now it mostly shows they do what the study said. It only becomes a fair test as new weeks come in.</li>
           <li><strong>It's a short window.</strong> The price history only goes back about 90 days, so each replay covers a few weeks. The tables above rebuild every week as more history comes in.</li>
         </ul>
       </div>
@@ -182,7 +181,7 @@ export function StatsPage() {
             <p>TypeSafe's <em>Jev</em> reads the rules text on each card and answers a few narrow questions with a probability. It never sees a price, only the words on the card.</p></div>
           <div className="flow-arrow" aria-hidden="true">→</div>
           <div className="flow-step"><span className="flow-n">3</span><strong>Decide</strong>
-            <p>Then plain old code with no AI in it mixes Jev's answers with the price trend and the EDHREC numbers into a demand score, and that score turns into Buy, Hold or Sell.</p></div>
+            <p>Then plain old code with no AI in it looks at how the card's price has been acting and how long it's been out, and turns that into Buy, Hold or Sell. Jev's answers feed the demand meter and the warnings on each card.</p></div>
           <div className="flow-arrow" aria-hidden="true">→</div>
           <div className="flow-step"><span className="flow-n">4</span><strong>Test</strong>
             <p>Every signal gets checked against what prices really did after something happened, like a new set coming out. So far that's one set.</p></div>
@@ -199,14 +198,41 @@ export function StatsPage() {
           <div className="q-card"><h3>Set-locked</h3><p>Does it only work with its own set's mechanics? This lowers the score.</p><span className="q-type">Yes/no probability</span></div>
         </div>
         <div className="formula">
-          <h3>From answers to a verdict</h3>
-          <p><strong>Demand</strong> = 30% deck breadth + 20% power + 15% build-around + 35% EDHREC adoption − 15% set-locked</p>
+          <h3>From price behavior to a verdict</h3>
           <ul>
-            <li><span className="v v-buy">▲ Buy</span> demand ≥ 55, already down 50%+ from its preorder peak, and flat this week (somewhere between −5% and +10%)</li>
-            <li><span className="v v-sell">▼ Sell</span> demand under 35 (or under 45 and still sliding), and worth at least $2</li>
+            <li><span className="v v-sell">▼ Sell</span> worth at least $2, and either it's 2 to 4 weeks after release (the crash), or it jumped 10%+ this week and sits 25%+ above its 90-day low</li>
+            <li><span className="v v-buy">▲ Buy</span> at least 4 weeks after release, dropped 10%+ this week, and worth at least 50 cents</li>
             <li><span className="v v-hold">◆ Hold</span> everything else</li>
           </ul>
-          <p className="muted small">These weights are my starting guess. The replay below is the first real check on them. Jev's Power score also bunches up between 0.50 and 0.69 on almost everything, so it barely separates one card from another right now. The test below is a different Jev question: which <em>older</em> cards a new set makes better.</p>
+          <p><strong>Demand meter</strong> = 30% deck breadth + 20% power + 15% build-around + 35% EDHREC adoption − 15% set-locked. It still shows on every card, but it doesn't pick the verdict anymore, because it didn't predict prices (see below).</p>
+          <p className="muted small">Buy here means "a better time to buy a card you want," not "this is going to go up." And none of these edges are big enough to flip cards for profit once TCGplayer fees and shipping come out.</p>
+        </div>
+      </motion.section>
+
+      <motion.section className="block" {...reveal}>
+        <p className="eyebrow">Where the rules came from</p>
+        <h2>What the price data actually says</h2>
+        <p>The first version of Buy was losing money, so on Sep 22 I went looking for tells. I took every card on the site on every week of the price history and looked at what its price did over the next 14 days. I picked the rules using the early weeks (Jul 21 to Aug 4) and then checked them on the later weeks (Aug 12 to Sep 3), which they'd never seen.</p>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead><tr><th>Checked on the later weeks</th><th>Cards</th><th>Median, next 14 days</th><th>Rose 10%+</th><th>Fell 10%+</th></tr></thead>
+            <tbody>
+              <tr><td className="muted">Every card</td><td>778</td><td>−2.0%</td><td>21%</td><td>31%</td></tr>
+              <tr><td><span className="v v-buy">▲</span> Old Buy rule</td><td>4</td><td>−5.5%</td><td>25%</td><td>50%</td></tr>
+              <tr><td><span className="v v-buy">▲</span> Dropped 10%+ this week, 4+ weeks after release</td><td>122</td><td>+1.4%</td><td>32%</td><td>26%</td></tr>
+              <tr><td><span className="v v-sell">▼</span> 2 to 4 weeks after release</td><td>35</td><td>−29%</td><td>3%</td><td>94%</td></tr>
+              <tr><td><span className="v v-sell">▼</span> Jumped 10%+ this week and 25%+ above its low</td><td>173</td><td>−9.5%</td><td>17%</td><td>47%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="caveats">
+          <ul>
+            <li><strong>Weeks 2 to 4 after release are the crash.</strong> Both sets that came out inside my price history, Marvel and The Hobbit, fell hard in that stretch. The old Buy rule was firing right in the middle of it.</li>
+            <li><strong>New cards snap back.</strong> A card that dropped 10% or more in a week tended to bounce. One that spiked tended to give it back. That's the opposite of the whole market, where cards that are going up tend to keep going up for a while.</li>
+            <li><strong>The hype drains out of commanders.</strong> Cards Jev expects people to build around, and legendaries in general, drifted down over the next couple of weeks. So Jev's answer shows up on those cards as a warning now.</li>
+            <li><strong>The demand score didn't predict anything</strong> over 14 days. It might over months, but I only have 90 days of history, so I can't test that yet.</li>
+            <li><strong>It's still thin.</strong> That's 7 weeks and 5 sets, and the crash rule rests on two releases. The weekly replay below is the real test from here on.</li>
+          </ul>
         </div>
       </motion.section>
 

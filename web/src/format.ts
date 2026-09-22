@@ -13,9 +13,9 @@ export type VerdictKey = Verdict | 'pending'
 
 // Status colors carry meaning only alongside an icon + label, never alone.
 export const VERDICTS: Record<VerdictKey, { label: string; icon: string; blurb: string }> = {
-  buy: { label: 'Buy', icon: '▲', blurb: 'Strong Commander demand, price looks like it has bottomed' },
+  buy: { label: 'Buy', icon: '▲', blurb: 'Past the release crash and just dropped. A better time to pick it up.' },
   hold: { label: 'Hold', icon: '◆', blurb: 'No strong signal either way. Keep it and watch.' },
-  sell: { label: 'Sell', icon: '▼', blurb: 'Weak long-term demand. Sell while it is still worth something.' },
+  sell: { label: 'Sell', icon: '▼', blurb: 'In the release crash, or riding a spike that tends to fade. Sell while it is up.' },
   pending: { label: 'Awaiting Jev', icon: '…', blurb: 'Not judged yet' },
 }
 
