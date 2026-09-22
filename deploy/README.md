@@ -32,6 +32,19 @@ Every run writes a row to `runs`: `ok`, `stale` (MTGJSON hadn't published a new
 day yet), `backfill`, or `failed` with the error in `note`. A failed run also
 shows as a failed unit in `systemctl`.
 
+## MTGJSON publish-time watch (temporary)
+
+`commander-oracle-watch.timer` polls MTGJSON hourly and appends
+`polled_utc  meta_date  prices_last_modified_utc` to `data/mtgjson-watch.tsv`.
+It exists to find when MTGJSON actually publishes, so the daily timer can be
+set after it. See what it has learned:
+
+```sh
+cd /opt/commander-oracle/app && sudo -u oracle .venv/bin/python -m oracle.watch --report
+```
+
+Once the daily timer is retimed, stop it: `systemctl disable --now commander-oracle-watch.timer`.
+
 ## Updating
 
 ```sh
