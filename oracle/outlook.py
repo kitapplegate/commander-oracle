@@ -56,7 +56,9 @@ def outlook(card: dict) -> dict:
     if bl is not None and bl >= 0.6:
         reasons.append("Dealers are paying a strong buylist price")
 
-    stabilizing = wk >= -5
+    # Stable means flat this week. A spike isn't a bottom: the 2026-09-22 replay
+    # (oracle.replay) caught Buy calls on +30-67% weeks that then fell 30-45%.
+    stabilizing = -5 <= wk <= 10
     if d >= 0.55 and off_peak <= -50 and stabilizing:
         verdict = "buy"
     elif d < 0.35 and price >= MIN_SELL_PRICE:

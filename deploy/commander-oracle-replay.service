@@ -1,0 +1,12 @@
+[Unit]
+Description=Commander Oracle: replay Buy/Hold/Sell as of 30 and 14 days ago and score it (one-shot)
+
+[Service]
+Type=oneshot
+User=oracle
+Group=oracle
+WorkingDirectory=/opt/commander-oracle/app
+# Reads data/cards.json from the daily run; writes data/replay.json. Results land in the journal too.
+ExecStart=/opt/commander-oracle/app/.venv/bin/python -m oracle.replay
+Nice=10
+TimeoutStartSec=5min

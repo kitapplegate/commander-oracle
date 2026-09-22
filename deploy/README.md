@@ -32,6 +32,16 @@ Every run writes a row to `runs`: `ok`, `stale` (MTGJSON hadn't published a new
 day yet), `backfill`, or `failed` with the error in `note`. A failed run also
 shows as a failed unit in `systemctl`.
 
+## Buy/Hold/Sell accuracy replay (weekly)
+
+`commander-oracle-replay.timer` runs `oracle.replay` every Monday at 09:00 UTC: it
+replays the verdict logic as of 30 and 14 days ago and scores it against today's
+prices. Read the latest result:
+
+```sh
+journalctl -u commander-oracle-replay -n 40 -o cat
+```
+
 ## MTGJSON publish-time watch (temporary)
 
 `commander-oracle-watch.timer` polls MTGJSON hourly and appends
