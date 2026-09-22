@@ -1,0 +1,9 @@
+[Unit]
+Description=Hourly MTGJSON publish-time watch (temporary: until the daily timer is retimed)
+
+[Timer]
+OnCalendar=hourly
+RandomizedDelaySec=2min
+
+[Install]
+WantedBy=timers.target

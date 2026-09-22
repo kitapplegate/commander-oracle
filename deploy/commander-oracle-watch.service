@@ -1,0 +1,13 @@
+[Unit]
+Description=Commander Oracle: log MTGJSON's publish time (one line per poll)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=oracle
+Group=oracle
+WorkingDirectory=/opt/commander-oracle/app
+ExecStart=/opt/commander-oracle/app/.venv/bin/python -m oracle.watch
+Nice=10
+TimeoutStartSec=2min
