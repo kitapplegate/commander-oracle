@@ -49,7 +49,18 @@ export interface StatsDoc {
   pipeline: { cards_tracked: number; history_from: string; history_to: string; days: number; price_rows: number; last_ok_run: string | null }
   set: { name: string; cards: number; verdicts: Record<string, number>; under_1: number }
   explore: ExploreDoc | null
+  replay: ReplayDoc | null
 }
+
+export interface ReplayGroup { n: number; median_change: number | null; rose: number | null; fell: number | null; fell_20: number | null }
+
+export interface ReplayRun {
+  as_of: string
+  groups: Record<'buy' | 'hold' | 'sell' | 'all', ReplayGroup>
+  calls: { name: string; set: string; verdict: string; then: number; now: number; change: number }[]
+}
+
+export interface ReplayDoc { generated: string; prices_to: string; runs: ReplayRun[] }
 
 export interface Share { n: number; share_up_25: number | null; median_change: number | null }
 

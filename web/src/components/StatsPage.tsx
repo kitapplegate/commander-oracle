@@ -1,6 +1,6 @@
 import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
-import type { Link, StatsDoc } from '../statsTypes'
+import type { Link, ReplayDoc, StatsDoc } from '../statsTypes'
 import { money, shortDate } from '../format'
 import { ColumnChart } from './charts/ColumnChart'
 import { CrashChart } from './charts/CrashChart'
@@ -55,6 +55,81 @@ function LinkTable({ rows, showSynergy }: { rows: Link[]; showSynergy: boolean }
         </tbody>
       </table>
     </div>
+  )
+}
+
+const VERDICT_ROWS = [
+  { key: 'buy', label: '▲ Buy', cls: 'v v-buy' },
+  { key: 'hold', label: '◆ Hold', cls: 'v v-hold' },
+  { key: 'sell', label: '▼ Sell', cls: 'v v-sell' },
+  { key: 'all', label: 'Every card', cls: 'muted' },
+] as const
+
+function ReplaySection({ r }: { r: ReplayDoc }) {
+  const buys = r.runs.flatMap(run => run.calls.filter(c => c.verdict === 'buy').map(c => ({ ...c, as_of: run.as_of })))
+  const buyWins = buys.filter(b => b.change > 0).length
+  return (
+    <motion.section className="block" {...reveal}>
+      <p className="eyebrow">Checking my own work</p>
+      <h2>Is Buy / Hold / Sell any good?</h2>
+      <p>Every Monday the server replays the verdict logic as if it ran {r.runs.map(run => shortDate(run.as_of)).join(' and ')}, using only the prices it would have had on that day, and then checks what those cards actually did up to {shortDate(r.prices_to)}.
+        Jev's answers never involve prices, so they come out the same on any date. The EDHREC numbers are today's though, which the replay couldn't have known back then, so if anything this makes the logic look a little better than it is.</p>
+      {r.runs.map(run => (
+        <div key={run.as_of} className="chart-card">
+          <h3>Verdicts as of {shortDate(run.as_of)}, prices on {shortDate(r.prices_to)}</h3>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead><tr><th>Verdict</th><th>Cards</th><th>Median change</th><th>Went up</th><th>Went down</th><th>Down 20%+</th></tr></thead>
+              <tbody>
+                {VERDICT_ROWS.map(v => {
+                  const g = run.groups[v.key]
+                  return (
+                    <tr key={v.key}>
+                      <td><span className={v.cls}>{v.label}</span></td>
+                      <td>{g.n}</td>
+                      <td>{g.median_change == null ? '—' : `${g.median_change > 0 ? '+' : ''}${g.median_change}%`}</td>
+                      <td>{g.rose == null ? '—' : `${g.rose}%`}</td>
+                      <td>{g.fell == null ? '—' : `${g.fell}%`}</td>
+                      <td>{g.fell_20 == null ? '—' : `${g.fell_20}%`}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ))}
+      {buys.length > 0 && (
+        <div className="chart-card">
+          <h3>Every Buy call in the replay</h3>
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead><tr><th>Card</th><th>Called on</th><th>Price then</th><th>Price now</th><th>Change</th></tr></thead>
+              <tbody>
+                {buys.map(b => (
+                  <tr key={b.name + b.as_of}>
+                    <td>{b.name}</td>
+                    <td className="muted">{shortDate(b.as_of)}</td>
+                    <td>{money(b.then)}</td>
+                    <td>{money(b.now)}</td>
+                    <td className={b.change >= 0 ? 'pos' : 'neg'}><span aria-hidden="true">{b.change >= 0 ? '▲' : '▼'}</span> {signed(b.change * 100)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="chart-note">That's {buyWins} of {buys.length} Buy calls that went up. Treat Buy as the weakest part of the site until that number gets better.</p>
+        </div>
+      )}
+      <div className="caveats">
+        <ul>
+          <li><strong>Sell had a small edge in the first replay (Sep 22).</strong> Cards it called Sell went down more often than the average card, but the whole market was sliding, so it's a small edge.</li>
+          <li><strong>Hold was basically the market.</strong> Almost every card lands there, so it doesn't tell you much yet.</li>
+          <li><strong>Buy was buying bounces.</strong> The first replay on Sep 22 caught it: the rule only checked that a card wasn't still dropping, so a card that jumped 30 to 67% in a week counted as "stable". Those picks fell 27 to 45% afterward. Now a card has to be flat that week, between −5% and +10%. That took three bad picks out, but on Sep 22 the ones left still lost money, so it isn't fixed yet.</li>
+          <li><strong>It's a short window.</strong> The price history only goes back about 90 days, so each replay covers a few weeks. The tables above rebuild every week as more history comes in.</li>
+        </ul>
+      </div>
+    </motion.section>
   )
 }
 
@@ -127,13 +202,15 @@ export function StatsPage() {
           <h3>From answers to a verdict</h3>
           <p><strong>Demand</strong> = 30% deck breadth + 20% power + 15% build-around + 35% EDHREC adoption − 15% set-locked</p>
           <ul>
-            <li><span className="v v-buy">▲ Buy</span> demand ≥ 55, already down 50%+ from its preorder peak, and not still sliding this week</li>
+            <li><span className="v v-buy">▲ Buy</span> demand ≥ 55, already down 50%+ from its preorder peak, and flat this week (somewhere between −5% and +10%)</li>
             <li><span className="v v-sell">▼ Sell</span> demand under 35 (or under 45 and still sliding), and worth at least $2</li>
             <li><span className="v v-hold">◆ Hold</span> everything else</li>
           </ul>
-          <p className="muted small">These weights are my starting guess and I haven't tested them yet. Jev's Power score also bunches up between 0.50 and 0.69 on almost everything, so it barely separates one card from another right now. The test below is a different Jev question: which <em>older</em> cards a new set makes better.</p>
+          <p className="muted small">These weights are my starting guess. The replay below is the first real check on them. Jev's Power score also bunches up between 0.50 and 0.69 on almost everything, so it barely separates one card from another right now. The test below is a different Jev question: which <em>older</em> cards a new set makes better.</p>
         </div>
       </motion.section>
+
+      {s.replay && <ReplaySection r={s.replay} />}
 
       {/* ---------------- backtest ---------------- */}
       <motion.section className="block" {...reveal}>
