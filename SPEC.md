@@ -48,4 +48,19 @@ price floor at ingest; the UI filters.
   React + Vite + motion web app (`web/`) reading `cards.json`, checked in Chrome at
   desktop and 400px widths. Prepared to become a public repo (MIT, with the WotC
   Fan Content Policy notice).
-- Next: backtest on an older set before trusting or tuning any weights.
+- 2026-09-21: Event backtest #1, The Hobbit release. Built `oracle/universe.py`
+  (31,781 Commander-legal cards with cheapest-printing daily prices from MTGJSON
+  AllPrintings.sqlite + AllPrices). Code picks 30 text/tribal candidates per new
+  card (`oracle/candidates.py`), and Jev scores each pair (`oracle/pair_jev.py`):
+  2,520 pairs, 1.72M input tokens, 72 seconds. Rules fixed before running: older
+  pool = pre-Jun-15 cards, not common-only, not reprinted since Jun 15,
+  baseline >= $0.50 (6,681 cards). "Jev-linked" means synergy >= 0.5.
+  Result: Jev-linked cards (n=467) had median +5.6% vs +3.3% for text-only
+  candidates and +2.5% for the market; 23.6% rose 25% or more (vs 15.2% / 13.6%);
+  17.6% peaked 50% or more (vs 9.9% / 8.6%). Permutation p = 0.009 vs text-only.
+  Spearman rho is only 0.09, so it raises the odds rather than predicting any one
+  card. The text candidate finder alone barely beats the market; Jev's
+  judgment is where the signal comes from. This is ONE event, so it needs
+  replication before any weights depend on it.
+- Next: store our own daily prices (MTGJSON keeps only 90 days) so every future
+  set release or ban becomes a new test; then replicate on the next event.
