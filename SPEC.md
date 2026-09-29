@@ -90,5 +90,11 @@ price floor at ingest; the UI filters.
   The peak is taken over the last 90 days; it's called the preorder peak only when
   that window covers preorders (today only hob). Set picker and "Showing X of Y"
   line in the UI. First server build took 6 minutes (EDHREC at 1 request/second).
+- 2026-09-29: `oracle.fair` is the result of record for Buy/Hold/Sell. Its dated reports in
+  `reports/` state the rule version (commit + fingerprint of outlook.py/signals.py), the frozen
+  universe, the cutoff, the horizon, and each call's event window. Only verdict dates on or after the
+  cutoff count. Changing the rules means locking a new version with a new cutoff. `oracle.replay` stays
+  as an in-sample view. The first fair result (7-day, interim) is in VERIFICATION.md; the 14-day one is
+  due after price day 2026-10-05.
 - Next: replicate the event backtest on the next set release or ban, using our
   own history.

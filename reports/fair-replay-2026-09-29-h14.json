@@ -1,0 +1,26 @@
+{
+ "run_date": "2026-09-29",
+ "rules": {
+  "version": "bea384a",
+  "locked": "2026-09-22",
+  "cutoff": "2026-09-21",
+  "fingerprint": "8defba803279"
+ },
+ "universe": [
+  "hob",
+  "msh",
+  "sos",
+  "tmt",
+  "ecl"
+ ],
+ "horizon": 14,
+ "prices_to": "2026-09-28",
+ "as_of_dates": [],
+ "first_due": "2026-10-05",
+ "watch": {
+  "code": "fra",
+  "name": "Reality Fracture",
+  "released": "2026-10-02"
+ },
+ "runs": []
+}

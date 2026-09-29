@@ -31,6 +31,18 @@
   Old rules: Buy 0 of 5 profitable after the spike fix removed 3 (`47b3450`). New rules (`bea384a`):
   Sell median −21% vs −7.5% market (Aug 22), Sep 7 Sells 26 of 26 fell; Buy −4.2%/−4.8% vs −7.5%/−7.1%.
   **In-sample**: same weeks the rules were chosen on. The first fair replay is 2026-09-28.
+- **2026-09-28 — the scheduled replay was NOT the fair one:** it scored as of Aug 28 and Sep 13 (30/14
+  days before the latest day), both inside the tuning window, so it was in-sample again. Its
+  `Result=success` only proves the unit ran.
+- **2026-09-29 — fair replay, verified in the real environment (`oracle.fair`, run on the VPS's live DB
+  read-only; reports in `reports/fair-replay-2026-09-29-h7.md` and `-h14.md`, the results of record):**
+  rules `bea384a`, fingerprint `8defba803279` (same locally and on the VPS), cutoff 2026-09-21, universe
+  hob/msh/sos/tmt/ecl frozen. Sep 21 verdicts were 54 Buy / 332 Hold / 2 Sell, identical to what the site
+  published on Sep 22. **Interim 7-day horizon** (the rules were picked on 14): Buy median +1.2% vs −1.2%
+  for its eligible pool (n=191), permutation p = 0.016; Sell n=2 (−22%, −10%), p = 0.074; all cards +0.0%.
+  All 388 cards were 28+ days past release, so **the crash-window Sell rule has no out-of-sample test yet**.
+  14-day result: not yet due; needs price day 2026-10-05. Code check: `oracle.fair`'s functions reproduce the
+  recorded in-sample Sep 7 → Sep 21 numbers exactly (Sell 26/26 fell, median −20.9%; Buy −4.8%).
 - **Study behind the rules (scratchpad, not in repo):** every site card × week, next-14-day return;
   rules picked on Jul 21–Aug 4, checked on Aug 12–Sep 3. Consistent tells: weekly move reverses
   (IC −0.19), distance above low (−0.16), price level (−0.13), Jev commander_draw (−0.10); demand ~0.
