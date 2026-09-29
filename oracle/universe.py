@@ -50,9 +50,9 @@ def connect() -> sqlite3.Connection:
     return db
 
 
-def load_printings() -> tuple[dict[str, dict], dict[str, str]]:
+def load_printings(path=PRINTINGS) -> tuple[dict[str, dict], dict[str, str]]:
     """Group paper, Commander-legal printings by oracle id."""
-    src = sqlite3.connect(PRINTINGS)
+    src = sqlite3.connect(path)
     rows = src.execute("""
         SELECT c.uuid, i.scryfallOracleId, c.name, c.type, c.text, c.keywords, c.subtypes,
                c.colorIdentity, c.manaValue, c.rarity, s.releaseDate, c.setCode, c.side

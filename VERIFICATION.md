@@ -54,6 +54,15 @@
   2+ links, under $3): 40.2% rose 25%+ (n=92) vs 17.2% market under $3. Exploratory; locked for the
   next set. Live page checked in Chrome (table 467/92 rows, no console errors, no overflow at 390px).
 
+## Rule A Watch list, Reality Fracture (`oracle.rule_a`, pre-registered)
+
+- **2026-09-29 — frozen before release (tested locally):** `python -m oracle.rule_a` froze 31 cards at
+  07:18:51 UTC, three days before FRA releases on Oct 2 (`reports/rule-a-fra-2026-09-29.md`). 102 new FRA/FRC
+  rares/mythics, older pool 6,716, 3,060 Jev pairs (2.09M input tokens), groups linked 339 / text-only 1,684 /
+  market 4,693. Baseline Jul 6–19 is before the first FRA preorder price (Jul 20; bulk from Sep 1). The Hobbit
+  backtest still reproduces exactly afterwards (`oracle.explore` guard). **Not yet scored:** after-window
+  Oct 27 – Nov 9; primary test is share up 25%+ vs 2,788 market cards under $3 (Hobbit 40.2% vs 17.2%).
+
 ## Site data refresh (build → judge → stats → publish)
 
 - **2026-09-22 — verified in the real environment:** the full chain via systemd published 388 cards +
