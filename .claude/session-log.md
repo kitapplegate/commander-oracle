@@ -1,5 +1,19 @@
 # Session Log
 
+## 2026-09-28 20:10 — Backlog triage (Brittany)
+
+**Summary:** Backlog triage by Brittany's weekly job. Open tasks from the previous entry were sorted into done-automatically / needs-Kit / parked / optional / drop. Only next and blocked stay as checkboxes; the previous entry keeps the original wording. Commander Oracle's new watcher and Buy/Hold/Sell rules are live on the VPS. The scheduled Sep 28 replay did run successfully; report review, timing, and the next-set rule still need follow-through.
+
+**Open tasks:**
+- [ ] next — Read oracle.watch --report after roughly 5–7 days, retime commander-oracle-daily.timer, and verify a first-run ok.
+- [ ] blocked (Kit) — Decide whether rule A gets separate Watch, Buy, and Jev lab displays.
+
+**Closed by Brittany (verified):**
+- First fair replay of the new rules on Mon 2026-09-28 — evidence: ssh journalctl -u commander-oracle-replay showed the 09:00:01 run wrote /opt/commander-oracle/app/data/replay.json and the service finished successfully.
+
+**Parked:**
+- Rule A on the next set: flag older cards before release and score about five weeks after.
+
 ## 2026-09-22 08:03
 
 **Summary:** Confirmed the 07:00 UTC timer fires unattended, but the run was `stale`: MTGJSON hadn't published Sep 22 by 11:00 UTC, so the timer is too early on late days. Added an hourly publish-time watcher (`oracle.watch`, `cc701e0`) to pick a new time. Rewrote the stats page in Kit's blog voice (`7ee58e6`). Built the Jev lab page (`28fff6a`, `686a836`): an exploratory Hobbit analysis plus a table of all 467 linked cards; rule A (Jev-linked, 2+ links, under $3) is locked for the next set. A replay (`oracle.replay`, weekly) showed Buy was wrong (it bought spikes mid-crash). A price study found the real tells: the weeks 2–4 release crash, weekly moves reverse, commander hype fades, and demand predicts nothing. Buy/Hold/Sell now uses those (`bea384a`), with the method on the stats page. Kit caught a misleading "when The Hobbit came out" claim; the site now says the test looks back (`6c8f122`). Correction: the TypeSafe key is also in the local `.env`.
